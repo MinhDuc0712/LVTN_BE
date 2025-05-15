@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->text('mo ta')->nullable();
+            $table->text('mo_ta')->nullable();
         });
     }
 
