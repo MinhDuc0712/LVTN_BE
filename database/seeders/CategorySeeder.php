@@ -11,18 +11,18 @@ class CategorySeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    // public function run(): void
-    // { 
-    //     $categories = [
-    //         "Nha o",
-    //         "phong tro",
-    //         "Can ho",
-    //         "Nha dat",
-    //     ];
-    //     foreach ($categories as $category) {
-    //         DB::table('categories') ->insert([
-    //             'name' => $category,
-    //         ]);
-    //     }
-    // }
+    public function run(): void
+    { 
+        $categories = [
+            "Nha o",
+            "phong tro",
+            "Can ho",
+            "Nha dat",
+        ];
+        foreach ($categories as $category) {
+            DB::table('categories') ->insert([
+                'name' => $category,
+            ]);
+        }
+    }
 }

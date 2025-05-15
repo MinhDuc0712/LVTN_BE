@@ -30,26 +30,19 @@ class CategoriesController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
-            'mo ta' => 'nullable|string|max:1000',
-        ]);
-        // Kiểm tra xem danh mục đã tồn tại hay chưa
-        $existingcategories = Categories::where('name', $request->name)->first();
-        if ($existingcategories) {
-            return response()->json([
-                'message' => 'Danh mục đã tồn tại',
-            ], 409);
-        }
-        // Tạo danh mục mới
-        $categories = Categories::create([
-            'name' => $request->name,
-            'mo ta' => $request->mota,
-        ]);
+        'name' => 'required|string|max:255',
+        'mo_ta' => 'nullable|string|max:1000',
+    ]);
 
-        return response()->json([
-            'message' => 'Danh mục đã được tạo thành công',
-            'data' => $categories
-        ], 201);
+    $category = Categories::create([
+        'name' => $request->name,
+        'mo_ta' => $request->mo_ta,
+    ]);
+
+    return response()->json([
+        'message' => 'Thêm danh mục thành công',
+        'category' => $category
+    ], 201);
     }
 
     /**
@@ -71,16 +64,35 @@ class CategoriesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Categories $categories)
+    public function update(Request $request, string $id)
     {
-        //
+         $request->validate([
+        'name' => 'required|string|max:255',
+        'mo_ta' => 'nullable|string|max:1000',
+    ]);
+
+    $category = Categories::findOrFail($id);
+    $category->update([
+        'name' => $request->name,
+        'mo_ta' => $request->mo_ta,
+    ]);
+
+    return response()->json([
+        'message' => 'Cập nhật danh mục thành công',
+        'category' => $category,
+    ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Categories $categories)
+    public function destroy(string $id)
     {
-        //
+        $category = Categories::findOrFail($id);
+    $category->delete();
+
+    return response()->json([
+        'message' => 'Xóa danh mục thành công',
+    ]);
     }
 }
