@@ -16,5 +16,5 @@ Route::prefix('user')->group(function () {
 
 Route::prefix('admin')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
-    
+    Route::post('deposit-history', [DepositController::class, 'store']);
 });
