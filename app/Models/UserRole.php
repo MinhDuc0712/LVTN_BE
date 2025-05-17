@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\User;
+use App\Models\UserRole;
+
+class UserRole extends Model
+{
+    protected $table = 'user_roles';
+    protected $primaryKey = ['MaNguoiDung', 'MaQuyen'];
+    public $timestamps = false;
+
+    protected $fillable = [
+        'MaNguoiDung',
+        'MaQuyen'
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'MaQuyen', 'MaQuyen');
+    }
+}
