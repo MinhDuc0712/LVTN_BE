@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'HoTen' => 'required|string|max:255',
+            'Email' => 'required|string|email|max:255|unique:users',
+            'SDT' => 'required|string|max:15',
+            'Password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $data['Password'] = bcrypt($data['Password']);
+
+        $user = User::create($data);
+
+        return response()->json(['message' => 'Đăng ký thành công', 'user' => $user], 201);
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -31,27 +47,12 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        auth()->logout();
+        $request->user()->tokens()->delete(); // Xóa tất cả token
 
-        return response()->json(['message' => 'Đăng xuất thành công']);
-    }
-    public function register(Request $request)
-    {
-        $data = $request->validate([
-            'HoTen' => 'required|string|max:255',
-            'Email' => 'required|string|email|max:255|unique:users',
-            'SDT' => 'required|string|max:15',
-            'Password' => 'required|string|min:8|confirmed',
-            'HinhDaiDien' => 'nullable|string|max:255',
-            'DiaChi' => 'nullable|string|max:255',
+        return response()->json([
+            'message' => 'Đăng xuất thành công.',
         ]);
-
-        $data['Password'] = bcrypt($data['Password']);
-
-        $user = User::create($data);
-
-        return response()->json(['message' => 'Đăng ký thành công', 'user' => $user], 201);
     }
 }
