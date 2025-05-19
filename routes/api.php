@@ -2,7 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\CategoriesController;
-
+use App\Http\Controllers\DepositHistoryController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -16,5 +16,6 @@ Route::prefix('user')->group(function () {
 
 Route::prefix('admin')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
-    
+        Route::apiResource('deposits', DepositHistoryController::class)->except(['show']);
+    Route::get('/users', [DepositHistoryController::class, 'users']);
 });

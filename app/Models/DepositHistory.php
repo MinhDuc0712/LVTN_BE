@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Deposit_history extends Model
+class DepositHistory extends Model
 {
     //
     protected $table = 'deposit_history';
     protected $fillable = [
+        'ma_nguoi_dung',
         'so_tien',
         'khuyen_mai',
         'thuc_nhan',
@@ -18,6 +19,10 @@ class Deposit_history extends Model
         'ghi_chu',
         'ngay_nap'
     ];
-    // public $timestamps = true;
+    public $timestamps = false;
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'ma_nguoi_dung', 'MaNguoiDung');
+    }
 
 }
