@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('khuyen_mai',15,2)->nullable();
             $table->decimal('thuc_nhan',15,2);
             $table->string('phuong_thuc');
+            $table->string('phuong_thuc');
             $table->string('ma_giao_dich')->unique();
             $table->string('trang_thai');
             $table->text('ghi_chu')->nullable();
