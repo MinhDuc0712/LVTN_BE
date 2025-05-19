@@ -29,6 +29,18 @@ class UserController extends Controller
     public function store(Request $request)
     {
         //
+        $data = $request->validate([
+            'HoTen' => 'required|string|max:255',
+            'Email' => 'required|string|email|max:255|unique:users',
+            'Password' => 'required|string|min:8|confirmed',
+            'SDT' => 'required|string|max:15|unique:users',
+            'HinhDaiDien' => 'nullable|string|max:255',
+            'DiaChi' => 'nullable|string|max:255',
+        ]);
+
+        $data['Password'] = bcrypt($data['Password']);
+        $user = User::create($data);
+        return response()->json(['message' => 'User created successfully', 'data' => $user], 201);
     }
 
     /**
@@ -37,6 +49,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         //
+        return response()->json($user);
     }
 
     /**

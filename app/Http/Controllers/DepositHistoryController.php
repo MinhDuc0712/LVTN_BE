@@ -13,6 +13,8 @@ class DepositHistoryController extends Controller
     public function index()
     {
         //
+        $deposit_history = Deposit_history::all();
+        return response()->json($deposit_history);
     }
 
     /**
@@ -29,6 +31,21 @@ class DepositHistoryController extends Controller
     public function store(Request $request)
     {
         //
+        $data = $request->validate([
+            'so_tien' => 'required|numeric',
+            'khuyen_mai' => 'nullable|numeric',
+            'thuc_nhan' => 'required|numeric',
+            'phuong_thuc' => 'required|string',
+            'ma_giao_dich' => 'required|string|unique:deposit_history,ma_giao_dich',
+            'trang_thai' => 'required|string',
+            'ghi_chu' => 'required|string',
+        ]);
+
+        $data['ngay_nap'] = now();
+
+        $deposit_history = Deposit_history::create($data);
+
+        return response()->json(['message' => 'Lưu thành công', 'data' => $deposit_history],201);
     }
 
     /**
