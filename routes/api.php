@@ -9,23 +9,23 @@ use App\Http\Controllers\AuthController;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-
 Route::prefix('user')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index', 'show']);
 });
-
 
 Route::prefix('admin')->group(function () {
     Route::apiResource('deposits', DepositHistoryController::class)->except(['show']);
     Route::apiResource('user', UserController::class);
     Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('users/{identifier}', [UserController::class, 'findUser']);
+
 });
 
 
