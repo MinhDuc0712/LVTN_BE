@@ -13,6 +13,8 @@ class UserController extends Controller
     public function index()
     {
         //
+        $users = User::all();
+        return response()->json($users);
     }
 
     /**
@@ -46,11 +48,15 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
-    {
-        //
-        return response()->json($user);
-    }
+    public function show($id)
+{
+    $user = User::findOrFail($id);
+    return response()->json([
+        'HoTen' => $user->HoTen,
+        'SDT' => $user->SDT
+        // hoặc field nào đúng trong bảng user
+    ]);
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -75,4 +81,27 @@ class UserController extends Controller
     {
         //
     }
+    public function findUser($identifier)
+{
+    // Tìm kiếm theo số điện thoại hoặc mã người dùng
+    $user = User::where('SDT', $identifier)
+               ->orWhere('MaNguoiDung', $identifier)
+               ->first();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Không tìm thấy người dùng'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'ma_nguoi_dung' => $user->MaNguoiDung,
+            'ho_ten' => $user->HoTen,
+            'sdt' => $user->SDT
+        ]
+    ]);
+}
 }

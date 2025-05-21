@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class DepositHistoryController extends Controller
 {
-
     public function index(Request $request)
     {
         $query = DepositHistory::with('user');
@@ -16,7 +15,8 @@ class DepositHistoryController extends Controller
         if ($search = $request->input('search')) {
             $query->whereHas('user', fn($q) =>
                 $q->where('SDT', 'like', "%$search%")
-                    ->orWhere('HoTen', 'like', "%$search%"));
+                    ->orWhere('HoTen', 'like', "%$search%")
+            )->orWhere('ma_giao_dich', 'like', "%$search%");
         }
 
         if ($status = $request->input('status')) {
@@ -25,7 +25,6 @@ class DepositHistoryController extends Controller
 
         return $query->orderBy('id', 'desc')->paginate(5);
     }
-
 
     public function store(Request $request)
     {
@@ -37,8 +36,8 @@ class DepositHistoryController extends Controller
             'trang_thai' => 'required|string',
             'ghi_chu' => 'nullable|string',
         ]);
-
-        $thuc_nhan = $request->so_tien + ($request->khuyen_mai ?? 0);
+        // $request->khuyen_mai = $request->so_tien * ($request->khuyen_mai/100);
+        $thuc_nhan = $request->so_tien + $request->so_tien*($request->khuyen_mai/100 ?? 0);
 
         $transaction = DepositHistory::create([
             'ma_nguoi_dung' => $request->ma_nguoi_dung,
@@ -47,20 +46,13 @@ class DepositHistoryController extends Controller
             'thuc_nhan' => $thuc_nhan,
             'phuong_thuc' => $request->phuong_thuc,
             'trang_thai' => $request->trang_thai,
-            'ghi_chu' => $request->input('ghi_chu', ''),
+            'ghi_chu' => $request->ghi_chu ?? '',
             'ma_giao_dich' => 'TXN' . now()->timestamp,
-            'ngay_nap' => now()->toDateString(),
+            'ngay_nap' => now()->toDateTimeString(),
         ]);
 
-        return response()->json($transaction->load('user'));
+        return response()->json($transaction->load('user'), 201);
     }
-
-
-    public function show(DepositHistory $depositHistory)
-    {
-
-    }
-
 
     public function update(Request $request, $id)
     {
@@ -71,8 +63,10 @@ class DepositHistoryController extends Controller
             'trang_thai' => 'required|string',
             'ghi_chu' => 'nullable|string',
         ]);
+
         $transaction = DepositHistory::findOrFail($id);
-        $thucNhan = $validated['so_tien'] + ($validated['khuyen_mai'] ?? 0);
+        $thucNhan = $validated['so_tien'] + $validated['so_tien']*($validated['khuyen_mai']/100 ?? 0);
+        
         $transaction->update([
             'so_tien' => $validated['so_tien'],
             'khuyen_mai' => $validated['khuyen_mai'] ?? 0,
@@ -85,14 +79,11 @@ class DepositHistoryController extends Controller
         return response()->json($transaction->load('user'));
     }
 
-
     public function destroy($id)
     {
         DepositHistory::findOrFail($id)->delete();
-        return response()->json(['message' => 'Đã xoá thành công']);
+        return response()->json(['message' => 'Đã xoá thành công'], 200);
     }
-    public function users()
-    {
-        return User::select('MaNguoiDung as id', 'HoTen as name')->get();
-    }
+
+    
 }
