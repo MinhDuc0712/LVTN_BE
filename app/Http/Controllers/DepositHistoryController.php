@@ -13,7 +13,9 @@ class DepositHistoryController extends Controller
         $query = DepositHistory::with('user');
 
         if ($search = $request->input('search')) {
-            $query->whereHas('user', fn($q) =>
+            $query->whereHas(
+                'user',
+                fn($q) =>
                 $q->where('SDT', 'like', "%$search%")
                     ->orWhere('HoTen', 'like', "%$search%")
             )->orWhere('ma_giao_dich', 'like', "%$search%");
@@ -29,7 +31,7 @@ class DepositHistoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ma_nguoi_dung' => 'required|exists:users,MaNguoiDung',
+            'ma_nguoi_dung' => 'required',
             'so_tien' => 'required|numeric|min:0',
             'khuyen_mai' => 'nullable|numeric|min:0',
             'phuong_thuc' => 'required|string',
@@ -37,8 +39,14 @@ class DepositHistoryController extends Controller
             'ghi_chu' => 'nullable|string',
         ]);
         // $request->khuyen_mai = $request->so_tien * ($request->khuyen_mai/100);
-        $thuc_nhan = $request->so_tien + $request->so_tien*($request->khuyen_mai/100 ?? 0);
+        $thuc_nhan = $request->so_tien + $request->so_tien * ($request->khuyen_mai / 100 ?? 0);
 
+        $user = User::where('MaNguoiDung', $request['ma_nguoi_dung'])
+            ->orWhere('SDT', $request['ma_nguoi_dung'])
+            ->firstOrFail();
+
+        // Thêm user_id thực vào dữ liệu
+        $request['ma_nguoi_dung'] = $user->MaNguoiDung;
         $transaction = DepositHistory::create([
             'ma_nguoi_dung' => $request->ma_nguoi_dung,
             'so_tien' => $request->so_tien,
@@ -65,8 +73,8 @@ class DepositHistoryController extends Controller
         ]);
 
         $transaction = DepositHistory::findOrFail($id);
-        $thucNhan = $validated['so_tien'] + $validated['so_tien']*($validated['khuyen_mai']/100 ?? 0);
-        
+        $thucNhan = $validated['so_tien'] + $validated['so_tien'] * ($validated['khuyen_mai'] / 100 ?? 0);
+
         $transaction->update([
             'so_tien' => $validated['so_tien'],
             'khuyen_mai' => $validated['khuyen_mai'] ?? 0,
@@ -85,5 +93,5 @@ class DepositHistoryController extends Controller
         return response()->json(['message' => 'Đã xoá thành công'], 200);
     }
 
-    
+
 }
