@@ -21,4 +21,8 @@ class User extends Authenticatable
     {
         return 'SDT';
     }
+    public function depositHistories()
+{
+    return $this->hasMany(DepositHistory::class, 'ma_nguoi_dung', 'MaNguoiDung');
+}
 }

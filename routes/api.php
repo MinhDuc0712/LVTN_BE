@@ -21,7 +21,11 @@ Route::prefix('user')->group(function () {
 });
 
 Route::prefix('admin')->group(function () {
-    Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::apiResource('deposits', DepositHistoryController::class)->except(['show']);
-    Route::get('/users', [DepositHistoryController::class, 'users']);
+    Route::apiResource('user', UserController::class);
+    Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('users/{identifier}', [UserController::class, 'findUser']);
+
 });
+
+
