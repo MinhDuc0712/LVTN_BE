@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\DepositHistoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RoleController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -18,6 +19,7 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('user')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index', 'show']);
+    // Route::apiResource('roles', RoleController::class)->only(['index']);
 });
 
 Route::prefix('admin')->group(function () {

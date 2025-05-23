@@ -15,14 +15,19 @@ class User extends Authenticatable
 
     protected $fillable = ['HoTen', 'Email', 'SDT', 'Password', 'HinhDaiDien', 'DiaChi'];
 
-    protected $hidden = ['Password', 'remember_token'];
+    protected $hidden = ['Password'];
 
     public function getAuthIdentifierName()
     {
         return 'SDT';
     }
     public function depositHistories()
-{
-    return $this->hasMany(DepositHistory::class, 'ma_nguoi_dung', 'MaNguoiDung');
-}
+    {
+        return $this->hasMany(DepositHistory::class, 'ma_nguoi_dung', 'MaNguoiDung');
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles', 'MaNguoiDung', 'MaQuyen');
+    }
 }
