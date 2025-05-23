@@ -17,14 +17,4 @@ class UserRole extends Model
         'MaNguoiDung',
         'MaQuyen'
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');
-    }
-
-    public function role()
-    {
-        return $this->belongsTo(Role::class, 'MaQuyen', 'MaQuyen');
-    }
 }

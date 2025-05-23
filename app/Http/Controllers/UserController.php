@@ -42,7 +42,7 @@ class UserController extends Controller
 
         $data['Password'] = bcrypt($data['Password']);
         $user = User::create($data);
-        return response()->json(['message' => 'User created successfully', 'data' => $user], 201);
+        return response()->json(['message' => 'Người dùng được tạo thành công', 'data' => $user], 201);
     }
 
     /**
