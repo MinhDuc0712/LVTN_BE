@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('Password');
             $table->string('HinhDaiDien')->nullable();           
             $table->text('DiaChi')->nullable();
+            $table->float('so_du')->nullable();
         });
     }
 
