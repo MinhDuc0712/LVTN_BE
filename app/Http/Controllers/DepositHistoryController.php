@@ -12,6 +12,9 @@ class DepositHistoryController extends Controller
     {
         $query = DepositHistory::with('user');
 
+        if ($userId = $request->input('ma_nguoi_dung')) {
+        $query->where('ma_nguoi_dung', $userId);
+    }
         if ($search = $request->input('search')) {
             $query->whereHas(
                 'user',
@@ -38,15 +41,15 @@ class DepositHistoryController extends Controller
             'trang_thai' => 'required|string',
             'ghi_chu' => 'nullable|string',
         ]);
-        // $request->khuyen_mai = $request->so_tien * ($request->khuyen_mai/100);
+
         $thuc_nhan = $request->so_tien + $request->so_tien * ($request->khuyen_mai / 100 ?? 0);
 
         $user = User::where('MaNguoiDung', $request['ma_nguoi_dung'])
             ->orWhere('SDT', $request['ma_nguoi_dung'])
             ->firstOrFail();
 
-        // Thêm user_id thực vào dữ liệu
         $request['ma_nguoi_dung'] = $user->MaNguoiDung;
+
         $transaction = DepositHistory::create([
             'ma_nguoi_dung' => $request->ma_nguoi_dung,
             'so_tien' => $request->so_tien,
@@ -58,7 +61,10 @@ class DepositHistoryController extends Controller
             'ma_giao_dich' => 'TXN' . now()->timestamp,
             'ngay_nap' => now()->toDateTimeString(),
         ]);
-
+        if ($request->trang_thai === 'Hoàn tất') {
+            $user->so_du += $thuc_nhan;
+            $user->save();
+        }
         return response()->json($transaction->load('user'), 201);
     }
 
@@ -75,6 +81,11 @@ class DepositHistoryController extends Controller
         $transaction = DepositHistory::findOrFail($id);
         $thucNhan = $validated['so_tien'] + $validated['so_tien'] * ($validated['khuyen_mai'] / 100 ?? 0);
 
+        if ($transaction->trang_thai !== 'Hoàn tất' && $validated['trang_thai'] === 'Hoàn tất') {
+            $user = $transaction->user;
+            $user->so_du += $thucNhan;
+            $user->save();
+        }
         $transaction->update([
             'so_tien' => $validated['so_tien'],
             'khuyen_mai' => $validated['khuyen_mai'] ?? 0,
@@ -89,8 +100,17 @@ class DepositHistoryController extends Controller
 
     public function destroy($id)
     {
-        DepositHistory::findOrFail($id)->delete();
-        return response()->json(['message' => 'Đã xoá thành công'], 200);
+       $transaction = DepositHistory::findOrFail($id);
+       
+    if ($transaction->trang_thai === 'Hoàn tất') {
+        $user = $transaction->user;
+        $user->so_du -= $transaction->thuc_nhan;
+        $user->save();
+    }
+    
+    $transaction->delete();
+    
+    return response()->json(['message' => 'Đã xoá thành công'], 200);
     }
 
 

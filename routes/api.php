@@ -27,7 +27,6 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('user', UserController::class);
     Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('users/{identifier}', [UserController::class, 'findUser']);
-
+    
 });
-
 
