@@ -2,6 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\UtilitiesController;
 use App\Http\Controllers\DepositHistoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
@@ -19,6 +20,7 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('user')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index', 'show']);
+    Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
     // Route::apiResource('roles', RoleController::class)->only(['index']);
 });
 
@@ -26,6 +28,7 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('deposits', DepositHistoryController::class)->except(['show']);
     Route::apiResource('user', UserController::class);
     Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('utilities', UtilitiesController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('users/{identifier}', [UserController::class, 'findUser']);
     
 });

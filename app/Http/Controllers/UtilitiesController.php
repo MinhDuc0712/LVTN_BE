@@ -12,7 +12,8 @@ class UtilitiesController extends Controller
      */
     public function index()
     {
-        //
+        $utilities = Utilities::all();
+        return response()->json($utilities);
     }
 
     /**
@@ -28,7 +29,16 @@ class UtilitiesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+        'TenTienIch' => 'required|string|max:255|unique:utilities',
+    ]);
+
+    $utility = Utilities::create($request->only('TenTienIch'));
+
+    return response()->json([
+        'message' => 'Thêm tiện ích thành công',
+        'data' => $utility
+    ], 201);
     }
 
     /**
@@ -50,16 +60,40 @@ class UtilitiesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Utilities $utilities)
+    public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+        'TenTienIch' => 'required|string|max:255|unique:utilities,TenTienIch,'.$id.',MaTienIch',
+    ]);
+
+    $utility = Utilities::findOrFail($id);
+    $utility->update([
+        'TenTienIch' => $request->TenTienIch, 
+    ]);
+
+    return response()->json([
+        'message' => 'Cập nhật tiện ích thành công',
+        'data' => $utility, 
+    ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Utilities $utilities)
+    public function destroy(string $id)
     {
-        //
+      $utility = Utilities::findOrFail($id);
+    
+    if ($utility->houses()->exists()) {
+        return response()->json([
+            'message' => 'Không thể xóa tiện ích vì đang được sử dụng bởi một số nhà',
+        ], 422);
     }
+
+    $utility->delete();
+
+    return response()->json([
+        'message' => 'Xóa tiện ích thành công',
+    ]);
+}
 }
