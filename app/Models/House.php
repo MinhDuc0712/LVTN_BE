@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class House extends Model
 {
     protected $table = 'houses';
@@ -11,6 +11,10 @@ class House extends Model
     public $timestamps = true;
     protected $fillable = [
         'TieuDe',
+        'Tinh_TP',
+        'Quan_Huyen',
+        'Phuong_xa',
+        'Duong',
         'DiaChi',
         'Gia',
         'SoPhongNgu',
@@ -20,8 +24,10 @@ class House extends Model
         'HinhAnh',
         'TrangThai',
         'NoiBat',
+        'MoTaChiTiet',
         'MaNguoiDung'
     ];
+    
     public function user()
     {
         return $this->belongsTo(User::class, 'MaChuNha', 'MaNguoiDung');
@@ -29,5 +35,14 @@ class House extends Model
     public function categories()
     {
         return $this->belongsTo(Categories::class, 'MaLoaiNha', 'MaLoaiNha');
+    }
+    public function utilities(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Utilities::class,
+            'house_utility',
+            'MaNha',
+            'MaTienIch'
+        );
     }
 }

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -14,8 +13,14 @@ return new class extends Migration
         Schema::create('utilities', function (Blueprint $table) {
             $table->id('MaTienIch');
             $table->string('TenTienIch')->unique();
-            $table->text('MoTa')->nullable();
+            $table->timestamps();
+        });
+
+        // Bảng trung gian cho quan hệ nhiều nhiềunhiều
+        Schema::create('house_utility', function (Blueprint $table) {
             $table->foreignId('MaNha')->constrained('houses')->onDelete('cascade');
+            $table->foreignId('MaTienIch')->constrained('utilities')->onDelete('cascade');
+            $table->primary(['MaNha', 'MaTienIch']);
         });
     }
 
