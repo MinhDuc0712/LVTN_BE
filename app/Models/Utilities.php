@@ -9,7 +9,7 @@ class Utilities extends Model
     //
 protected $table = 'utilities';
     protected $primaryKey = 'MaTienIch'; 
-    public $timestamps = true; 
+    public $timestamps = false; 
     
     protected $fillable = [
         'TenTienIch', 
