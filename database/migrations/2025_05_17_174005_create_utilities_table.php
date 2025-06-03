@@ -13,10 +13,9 @@ return new class extends Migration {
         Schema::create('utilities', function (Blueprint $table) {
             $table->id('MaTienIch');
             $table->string('TenTienIch')->unique();
-            $table->timestamps();
         });
 
-        // Bảng trung gian cho quan hệ nhiều nhiềunhiều
+        // Bảng trung gian cho quan hệ nhiều nhiều
         Schema::create('house_utility', function (Blueprint $table) {
             $table->foreignId('MaNha')->constrained('houses')->onDelete('cascade');
             $table->foreignId('MaTienIch')->constrained('utilities')->onDelete('cascade');

@@ -13,15 +13,10 @@ class DepositHistoryController extends Controller
         $query = DepositHistory::with('user');
 
         if ($userId = $request->input('ma_nguoi_dung')) {
-        $query->where('ma_nguoi_dung', $userId);
-    }
+            $query->where('ma_nguoi_dung', $userId);
+        }
         if ($search = $request->input('search')) {
-            $query->whereHas(
-                'user',
-                fn($q) =>
-                $q->where('SDT', 'like', "%$search%")
-                    ->orWhere('HoTen', 'like', "%$search%")
-            )->orWhere('ma_giao_dich', 'like', "%$search%");
+            $query->whereHas('user', fn($q) => $q->where('SDT', 'like', "%$search%")->orWhere('HoTen', 'like', "%$search%"))->orWhere('ma_giao_dich', 'like', "%$search%");
         }
 
         if ($status = $request->input('status')) {
@@ -44,9 +39,7 @@ class DepositHistoryController extends Controller
 
         $thuc_nhan = $request->so_tien + $request->so_tien * ($request->khuyen_mai / 100 ?? 0);
 
-        $user = User::where('MaNguoiDung', $request['ma_nguoi_dung'])
-            ->orWhere('SDT', $request['ma_nguoi_dung'])
-            ->firstOrFail();
+        $user = User::where('MaNguoiDung', $request['ma_nguoi_dung'])->orWhere('SDT', $request['ma_nguoi_dung'])->firstOrFail();
 
         $request['ma_nguoi_dung'] = $user->MaNguoiDung;
 
@@ -100,18 +93,16 @@ class DepositHistoryController extends Controller
 
     public function destroy($id)
     {
-       $transaction = DepositHistory::findOrFail($id);
-       
-    if ($transaction->trang_thai === 'Hoàn tất') {
-        $user = $transaction->user;
-        $user->so_du -= $transaction->thuc_nhan;
-        $user->save();
-    }
-    
-    $transaction->delete();
-    
-    return response()->json(['message' => 'Đã xoá thành công'], 200);
-    }
+        $transaction = DepositHistory::findOrFail($id);
 
+        if ($transaction->trang_thai === 'Hoàn tất') {
+            $user = $transaction->user;
+            $user->so_du -= $transaction->thuc_nhan;
+            $user->save();
+        }
 
+        $transaction->delete();
+
+        return response()->json(['message' => 'Đã xoá thành công'], 200);
+    }
 }

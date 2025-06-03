@@ -34,7 +34,7 @@ class UserController extends Controller
         $data = $request->validate([
             'HoTen' => 'required|string|max:255',
             'Email' => 'required|string|email|max:255|unique:users',
-            'Password' => 'required|string|min:8|confirmed',
+            'Password' => 'required|string|min:8',
             'SDT' => 'required|string|max:15|unique:users',
             'HinhDaiDien' => 'nullable|string|max:255',
             'DiaChi' => 'nullable|string|max:255',
@@ -49,14 +49,13 @@ class UserController extends Controller
      * Display the specified resource.
      */
     public function show($id)
-{
-    $user = User::findOrFail($id);
-    return response()->json([
-        'HoTen' => $user->HoTen,
-        'SDT' => $user->SDT
-        // hoặc field nào đúng trong bảng user
-    ]);
-}
+    {
+        $user = User::findOrFail($id);
+        return response()->json([
+            'HoTen' => $user->HoTen,
+            'SDT' => $user->SDT,
+        ]);
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -82,26 +81,27 @@ class UserController extends Controller
         //
     }
     public function findUser($identifier)
-{
-    // Tìm kiếm theo số điện thoại hoặc mã người dùng
-    $user = User::where('SDT', $identifier)
-               ->orWhere('MaNguoiDung', $identifier)
-               ->first();
+    {
+        // Tìm kiếm theo số điện thoại hoặc mã người dùng
+        $user = User::where('SDT', $identifier)->orWhere('MaNguoiDung', $identifier)->first();
 
-    if (!$user) {
+        if (!$user) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Không tìm thấy người dùng',
+                ],
+                404,
+            );
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'Không tìm thấy người dùng'
-        ], 404);
+            'success' => true,
+            'data' => [
+                'ma_nguoi_dung' => $user->MaNguoiDung,
+                'ho_ten' => $user->HoTen,
+                'sdt' => $user->SDT,
+            ],
+        ]);
     }
-
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'ma_nguoi_dung' => $user->MaNguoiDung,
-            'ho_ten' => $user->HoTen,
-            'sdt' => $user->SDT
-        ]
-    ]);
-}
 }

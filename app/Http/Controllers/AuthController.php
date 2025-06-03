@@ -10,45 +10,35 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-public function register(Request $request)
-{
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'HoTen' => 'required|string|max:255',
+            'Email' => 'required|string|email|max:255|unique:users',
+            'SDT' => 'required|string|max:15|unique:users',
+            'Password' => 'required|string|min:8',
+            'MaQuyen' => 'required|integer|exists:roles,MaQuyen',
+        ]);
 
-    $data = $request->validate([
-        'HoTen' => 'required|string|max:255',
-        'Email' => 'required|string|email|max:255|unique:users',
-        'SDT' => 'required|string|max:15|unique:users',
-        'Password' => 'required|string|min:8',
-        'MaQuyen' => 'required|integer|exists:roles,MaQuyen',
-    ]);
+        $data['Password'] = bcrypt($data['Password']);
 
+        $user = User::create([
+            'HoTen' => $data['HoTen'],
+            'Email' => $data['Email'],
+            'SDT' => $data['SDT'],
+            'Password' => $data['Password'],
+        ]);
 
-    $data['Password'] = bcrypt($data['Password']);
+        $user->roles()->attach($data['MaQuyen']);
 
-    $user = User::create([
-        'HoTen' => $data['HoTen'],
-        'Email' => $data['Email'],
-        'SDT' => $data['SDT'],
-        'Password' => $data['Password'],
-    ]);
-
-    $user->roles()->attach($data['MaQuyen']);
-
-    // try {
-    //     $user->roles()->attach($data['MaQuyen']);
-    // } catch (Exception $e) {
-    //     return response()->json([
-    //         'message' => 'Lỗi khi gán quyền: ' . $e->getMessage(),
-    //     ], 500);
-    // }
-
-    return response()->json(
-        [
-            'message' => 'Đăng ký thành công',
-            'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT']),
-        ],
-        201,
-    );
-}
+        return response()->json(
+            [
+                'message' => 'Đăng ký thành công',
+                'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT']),
+            ],
+            201,
+        );
+    }
 
     public function login(Request $request)
     {
@@ -56,7 +46,6 @@ public function register(Request $request)
             'SDT' => 'required|string',
             'Password' => 'required|string',
         ]);
-
         $user = User::where('SDT', $request->SDT)->first();
 
         if (!$user || !Hash::check($request->Password, $user->Password)) {
@@ -81,6 +70,53 @@ public function register(Request $request)
 
         return response()->json([
             'message' => 'Đăng xuất thành công.',
+        ]);
+    }
+
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        $roles = $user->roles()->pluck('TenQuyen')->toArray();
+
+        return response()->json([
+            'user' => $user,
+            'roles' => $roles,
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(
+                [
+                'success' => false,
+                'message' => 'Người dùng không được xác thực'
+            ], 401);
+        }
+
+        if (!Hash::check($request->current_password, $user->Password)) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Mật khẩu hiện tại không đúng',
+                ],
+                400,
+            );
+        }
+
+        $user->Password = bcrypt($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đổi mật khẩu thành công',
         ]);
     }
 }
