@@ -6,6 +6,7 @@ use App\Http\Controllers\UtilitiesController;
 use App\Http\Controllers\DepositHistoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HouseController;
 use App\Http\Controllers\RoleController;
 
 Route::prefix('auth')->group(function () {
@@ -21,7 +22,8 @@ Route::get('/user', function (Request $request) {
 Route::prefix('user')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index', 'show']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
-    // Route::apiResource('roles', RoleController::class)->only(['index']);
+    Route::post('/houses/store', [HouseController::class, 'store'])->name('houses.store');
+Route::post('/houses/{id}/process-payment', [HouseController::class, 'processPayment'])->name('houses.payment.process');
 });
 
 Route::prefix('admin')->group(function () {

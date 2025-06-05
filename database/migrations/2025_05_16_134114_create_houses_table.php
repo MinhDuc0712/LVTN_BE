@@ -26,7 +26,7 @@ return new class extends Migration
             $table->float('Gia');
             $table->date('NgayDang');
             $table->date('NgayHetHan')->nullable();
-            $table->enum('TrangThai',['Đang hoạt động','Hết hạn','Đã xóa','Đang xử lý']);
+            $table->enum('TrangThai',['Đang hoạt động','Tin hết hạn','Đã xóa','Đang xử lý','Đang chờ thanh toán']);
             $table->boolean('NoiBat')->default(false);
             $table->text('MoTaChiTiet')->nullable();
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
