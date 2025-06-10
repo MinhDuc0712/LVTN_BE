@@ -16,56 +16,32 @@ class ImagesController extends Controller
      */
     public function uploadHouseImages(Request $request, $houseId)
     {
-        $house = House::findOrFail($houseId);
-
-    $request->validate([
-        'images' => 'required|array|max:20',
-        'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+        $request->validate([
+        'images' => 'required|array',
+        'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB
     ]);
 
-    try {
-        DB::beginTransaction();
-        
-        $uploadedImages = [];
-        $isFirstImage = true;
-        
-        foreach ($request->file('images') as $image) {
-            $fileName = Str::random(20) . '.' . $image->getClientOriginalExtension();
-            $path = $image->storeAs('public/house_images', $fileName);
-            
-            $imageRecord = Images::create([
-                'MaNha' => $houseId,
-                'ten_file' => $fileName,
-                'LaAnhDaiDien' => $isFirstImage,
-                'NgayTao' => now()
-            ]);
+    $house = House::findOrFail($houseId);
 
-            
-            if ($isFirstImage && empty($house->HinhAnh)) {
-                $house->update([
-                    'HinhAnh' => Storage::url($path)
-                ]);
-            }
-            
-            $isFirstImage = false;
-            $uploadedImages[] = $imageRecord;
-        }
+    $uploadedImages = [];
 
-        DB::commit();
+    foreach ($request->file('images') as $image) {
+        $fileName = Str::random(20) . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('public/houses/images', $fileName);
 
-        return response()->json([
-            'success' => true,
-            'data' => $uploadedImages
+        $imageModel = new Images([
+            'MaNha' => $house->MaNha,
+            'DuongDan' => Storage::url($path)
         ]);
+        $imageModel->save();
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            'message' => 'Lỗi khi upload ảnh',
-            'error' => $e->getMessage()
-        ], 500);
+        $uploadedImages[] = $imageModel;
     }
+
+    return response()->json([
+        'success' => true,
+        'images' => $uploadedImages
+    ]);
 }
 
 public function getHouseImages($houseId)
