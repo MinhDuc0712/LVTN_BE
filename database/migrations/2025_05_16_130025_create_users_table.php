@@ -17,9 +17,11 @@ return new class extends Migration
             $table->string('Email')->unique();
             $table->string('SDT',20);
             $table->string('Password');
-            $table->string('HinhDaiDien')->nullable();           
+            $table->longText('HinhDaiDien')->nullable();           
             $table->text('DiaChi')->nullable();
             $table->float('so_du')->nullable();
+            $table->enum('TrangThai', ['Đang hoạt động', 'Tạm khóa', 'Bị cấm'])->default('Đang hoạt động');
+            $table->text('LyDoCam')->nullable();
         });
     }
 
