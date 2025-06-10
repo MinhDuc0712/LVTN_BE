@@ -16,13 +16,8 @@ protected $table = 'utilities';
     ];
 
     
-    public function houses(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            House::class,     
-            'house_utility',   
-            'MaTienIch',        
-            'MaNha'          
-        );
-    }
+    public function houses()
+{
+    return $this->belongsToMany(House::class, 'house_utility', 'MaTienIch', 'MaNha');
+}
 }
