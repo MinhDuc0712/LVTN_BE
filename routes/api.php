@@ -14,6 +14,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/profile', [AuthController::class, 'profile'])->middleware('auth:sanctum');
+    Route::post('/updateProfile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
     Route::post('/changePassword', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 });
 
@@ -32,7 +33,10 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('deposits', DepositHistoryController::class)->except(['show']);
     Route::apiResource('user', UserController::class);
     Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('/user/{id}/ban', [UserController::class, 'ban']);
+    Route::post('/user/{id}/unban', [UserController::class, 'unban']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('users/{identifier}', [UserController::class, 'findUser']);    
+    Route::apiResource('roles', RoleController::class)->except(['show', 'edit']);
 });
 

@@ -36,7 +36,7 @@ class RoleController extends Controller
             'MoTa' => 'nullable|string|max:255',
         ]);
         $role = Role::create($data);
-        return response()->json(['message' => 'Role created successfully', 'data' => $role], 201);
+        return response()->json(['message' => 'Quyền được tạo thành công', 'data' => $role], 201);
     }
 
     /**

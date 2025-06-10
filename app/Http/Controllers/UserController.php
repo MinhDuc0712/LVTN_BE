@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -13,8 +15,22 @@ class UserController extends Controller
     public function index()
     {
         //
-        $users = User::all();
-        return response()->json($users);
+        $users = User::with('roles')->get();
+        return response()->json(
+            $users->map(function ($user) {
+                return [
+                    'MaNguoiDung' => $user->MaNguoiDung,
+                    'HoTen' => $user->HoTen,
+                    'Email' => $user->Email,
+                    'SDT' => $user->SDT,
+                    'HinhDaiDien' => $user->HinhDaiDien,
+                    'DiaChi' => $user->DiaChi,
+                    'TrangThai' => $user->TrangThai,
+                    'LyDoCam' => $user->LyDoCam,
+                    'Role' => $user->role, // Sử dụng accessor getRoleAttribute
+                ];
+            }),
+        );
     }
 
     /**
@@ -42,6 +58,15 @@ class UserController extends Controller
 
         $data['Password'] = bcrypt($data['Password']);
         $user = User::create($data);
+
+        $role = Role::where('TenQuyen', 'user')->first();
+        if ($role) {
+            UserRole::create([
+                'MaNguoiDung' => $user->MaNguoiDung,
+                'MaQuyen' => $role->MaQuyen,
+            ]);
+        }
+
         return response()->json(['message' => 'Người dùng được tạo thành công', 'data' => $user], 201);
     }
 
@@ -68,9 +93,29 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        // Validate dữ liệu
+        $data = $request->validate([
+            'Role' => 'required|in:user,guest,owner,admin',
+            'TrangThai' => 'required|in:Đang hoạt động,Tạm khóa,Bị cấm',
+        ]);
+
+        // Cập nhật TrangThai trong bảng users
+        $user->update([
+            'TrangThai' => $data['TrangThai'],
+        ]);
+
+        // Tìm role tương ứng với TenQuyen
+        $role = Role::where('TenQuyen', $data['Role'])->firstOrFail();
+
+        // Xóa role cũ (nếu có) và gán role mới
+        $user->roles()->sync([$role->MaQuyen]);
+
+
+        return response()->json(['message' => 'User updated successfully']);
     }
 
     /**
@@ -80,6 +125,45 @@ class UserController extends Controller
     {
         //
     }
+
+    public function ban(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $data = $request->validate([
+            'LyDo' => 'nullable|string|max:255',
+        ]);
+
+        $user->TrangThai = 'Bị cấm';
+        $user->LyDoCam = $data['LyDo'] ?? null;
+        $user->save();
+
+        return response()->json(
+            [
+                'message' => 'Cấm người dùng thành công',
+                'data' => $user,
+            ],
+            200,
+        );
+    }
+
+    public function unban($id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->TrangThai = 'Đang hoạt động';
+        $user->LyDoCam = null;
+        $user->save();
+
+        return response()->json(
+            [
+                'message' => 'Bỏ cấm người dùng thành công',
+                'data' => $user,
+            ],
+            200,
+        );
+    }
+
     public function findUser($identifier)
     {
         // Tìm kiếm theo số điện thoại hoặc mã người dùng

@@ -13,7 +13,7 @@ class User extends Authenticatable
     protected $primaryKey = 'MaNguoiDung';
     public $timestamps = false;
 
-    protected $fillable = ['HoTen', 'Email', 'SDT', 'Password', 'HinhDaiDien', 'DiaChi', 'so_du'];
+    protected $fillable = ['HoTen', 'Email', 'SDT', 'Password', 'HinhDaiDien', 'DiaChi', 'so_du', 'TrangThai', 'LyDoCam'];
 
     protected $hidden = ['Password'];
 
@@ -29,5 +29,10 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'MaNguoiDung', 'MaQuyen');
+    }
+
+    public function getRoleAttribute()
+    {
+        return $this->roles->first()->TenQuyen ?? 'guest';
     }
 }
