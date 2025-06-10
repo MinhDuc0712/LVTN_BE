@@ -12,11 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('images', function (Blueprint $table) {
-            $table->id('MaHinhAnh');
-            $table->string('DuongDanHinh');
-            $table->foreignId('MaNha')->constrained('houses')->onDelete('cascade');
-            $table->boolean('HinhDaiDien')->default(false);
-            $table->date('NgayTao');
+             $table->id('MaHinhAnh');
+            $table->unsignedBigInteger('MaNha');
+            $table->string('ten_file', 255); 
+            $table->boolean('LaAnhDaiDien')->default(false);
+            $table->timestamps();
+
+            $table->foreign('MaNha')
+                  ->references('MaNha')
+                  ->on('House')
+                  ->onDelete('cascade');
         });
     }
 

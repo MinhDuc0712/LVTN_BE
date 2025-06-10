@@ -8,12 +8,17 @@ class Images extends Model
 {
     //
     protected $table = 'images';
-    protected $fillable = [
-        'MaHinhAnh',
-        'DuongDanHinh',
-        'MaNha',
-        'HinhDaiDien',
-        'NgayTao'
-    ];
+     protected $primaryKey = 'MaHinhAnh';
+    protected $fillable = ['MaNha', 'ten_file', 'LaAnhDaiDien'];
+
+     public function getUrlAttribute()
+    {
+        return asset('storage/house_images/' . $this->ten_file);
+    }
+
+    public function nha()
+    {
+        return $this->belongsTo(House::class, 'MaNha');
+    }
     
 }

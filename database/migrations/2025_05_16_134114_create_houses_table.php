@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,18 +16,28 @@ return new class extends Migration
             $table->string('Tinh_TP');
             $table->string('Quan_Huyen');
             $table->string('Phuong_Xa');
-            $table->string('Duong');
+            $table->string('Duong')->nullable();
             $table->string('DiaChi');
             $table->integer('SoPhongNgu');
             $table->integer('SoPhongTam');
             $table->integer('SoTang')->nullable();
             $table->float('DienTich');
             $table->float('Gia');
-            $table->date('NgayDang');
+$table->timestamp('NgayDang')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->date('NgayHetHan')->nullable();
-            $table->enum('TrangThai',['Đang hoạt động','Tin hết hạn','Đã xóa','Đang xử lý','Đang chờ thanh toán']);
+            $table->enum('TrangThai', [
+                'Đang chờ thanh toán',
+                'Đang xử lý',
+                'Đã duyệt',
+                'Đã từ chối',
+                'Đã cho thuê',
+                'Đã ẩn',
+                'Tin hết hạn',
+                'Đã xóa'
+            ])->default('Đang chờ thanh toán');
             $table->boolean('NoiBat')->default(false);
             $table->text('MoTaChiTiet')->nullable();
+            $table->string('HinhAnh')->nullable();
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
             $table->foreignId('MaDanhMuc')->constrained('categories')->onDelete('cascade');
         });
@@ -39,6 +48,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('houses');
-    }
+    Schema::table('houses', function (Blueprint $table) {
+$table->string('Duong')->nullable()->default(null)->change();
+    });
+}
 };

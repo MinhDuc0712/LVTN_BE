@@ -6,14 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class House extends Model
 {
+    const STATUS_PENDING_PAYMENT = 'Đang chờ thanh toán';
+    const STATUS_PROCESSING = 'Đang xử lý';
+    const STATUS_APPROVED = 'Đã duyệt';
+    const STATUS_REJECTED = 'Đã từ chối';
+    const STATUS_RENTED = 'Đã cho thuê';
+    const STATUS_HIDDEN = 'Đã ẩn';
     protected $table = 'houses';
     protected $primaryKey = 'MaNha';
-    public $timestamps = true;
+    public $timestamps = false;
     protected $fillable = [
         'TieuDe',
         'Tinh_TP',
         'Quan_Huyen',
-        'Phuong_xa',
+        'Phuong_Xa',
         'Duong',
         'DiaChi',
         'Gia',
@@ -25,24 +31,43 @@ class House extends Model
         'TrangThai',
         'NoiBat',
         'MoTaChiTiet',
-        'MaNguoiDung'
+        'NgayHetHan',
+        'MaNguoiDung',
+        'MaDanhMuc'
     ];
     
+  
+
+public function scopeApproved($query)
+{
+    return $query->where('TrangThai', self::STATUS_APPROVED);
+}
+
+public function scopeByUser($query, $userId)
+{
+    return $query->where('MaNguoiDung', $userId);
+}
+
+public function getFullAddressAttribute()
+{
+    return "{$this->Duong}, {$this->Phuong_Xa}, {$this->Quan_Huyen}, {$this->Tinh_TP}";
+}
     public function user()
     {
-        return $this->belongsTo(User::class, 'MaChuNha', 'MaNguoiDung');
-    }
-    public function categories()
+return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');    }
+    public function category()
     {
-        return $this->belongsTo(Categories::class, 'MaLoaiNha', 'MaLoaiNha');
+        return $this->belongsTo(Categories::class, 'MaDanhMuc', 'MaDanhMuc');
     }
-    public function utilities(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Utilities::class,
-            'house_utility',
-            'MaNha',
-            'MaTienIch'
-        );
-    }
+
+    public function utilities()
+{
+    return $this->belongsToMany(Utilities::class, 'house_utility', 'MaNha', 'MaTienIch');
+}
+public function images()
+{
+    return $this->hasMany(Images::class, 'MaNha', 'MaNha');
+}
+
+    
 }

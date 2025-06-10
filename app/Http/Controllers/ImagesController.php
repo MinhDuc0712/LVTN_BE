@@ -4,12 +4,129 @@ namespace App\Http\Controllers;
 
 use App\Models\Images;
 use Illuminate\Http\Request;
-
+use App\Models\House;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 class ImagesController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    public function uploadHouseImages(Request $request, $houseId)
+    {
+        $house = House::findOrFail($houseId);
+
+    $request->validate([
+        'images' => 'required|array|max:20',
+        'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+    ]);
+
+    try {
+        DB::beginTransaction();
+        
+        $uploadedImages = [];
+        $isFirstImage = true;
+        
+        foreach ($request->file('images') as $image) {
+            $fileName = Str::random(20) . '.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('public/house_images', $fileName);
+            
+            $imageRecord = Images::create([
+                'MaNha' => $houseId,
+                'ten_file' => $fileName,
+                'LaAnhDaiDien' => $isFirstImage,
+                'NgayTao' => now()
+            ]);
+
+            
+            if ($isFirstImage && empty($house->HinhAnh)) {
+                $house->update([
+                    'HinhAnh' => Storage::url($path)
+                ]);
+            }
+            
+            $isFirstImage = false;
+            $uploadedImages[] = $imageRecord;
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'data' => $uploadedImages
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Lỗi khi upload ảnh',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function getHouseImages($houseId)
+{
+    $images = Images::where('MaNha', $houseId)
+        ->orderBy('LaAnhDaiDien', 'DESC')
+        ->orderBy('NgayTao', 'ASC')
+        ->get()
+        ->map(function ($image) {
+            return [
+                'MaHinhAnh' => $image->MaHinhAnh,
+                'url' => Storage::url('public/house_images/' . $image->ten_file),
+                'LaAnhDaiDien' => $image->LaAnhDaiDien,
+                'NgayTao' => $image->NgayTao
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'data' => $images
+    ]);
+}
+
+    // Xóa ảnh
+    public function deleteHouseImage($houseId, $imageId)
+    {
+        $image = Images::where('MaNha', $houseId)
+            ->where('MaHinhAnh', $imageId)
+            ->firstOrFail();
+
+        // Xóa file vật lý
+        Storage::delete('public/house_images/' . $image->ten_file);
+        
+        // Xóa record database
+        $image->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image deleted successfully'
+        ]);
+    }
+
+    // Đặt làm ảnh đại diện
+    public function setMainImage($houseId, $imageId)
+    {
+        // Bỏ đặt tất cả ảnh đại diện cũ
+        Images::where('MaNha', $houseId)
+            ->update(['LaAnhDaiDien' => false]);
+        
+        // Đặt ảnh mới làm đại diện
+        $image = Images::where('MaNha', $houseId)
+            ->where('MaHinhAnh', $imageId)
+            ->firstOrFail();
+        
+        $image->update(['LaAnhDaiDien' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Main image updated successfully'
+        ]);
+    }
     public function index()
     {
         //
@@ -58,8 +175,47 @@ class ImagesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Images $images)
+    public function destroy($imageId)
     {
-        //
+        $image = Images::findOrFail($imageId);
+        $house = House::findOrFail($image->MaNha);
+        if ($house->MaNguoiDung !== Auth::id()) {
+            return response()->json(['message' => 'Không có quyền thao tác'], 403);
+        }
+
+        if ($image->DuongDanHinh) {
+            Storage::delete(str_replace('/storage/', 'public/', $image->DuongDanHinh));
+        }
+
+        $image->delete();
+
+        return response()->json(['success' => true]);
+    }
+    public function list($houseId)
+    {
+        $house = House::findOrFail($houseId);
+        if ($house->MaNguoiDung !== Auth::id()) {
+            return response()->json(['message' => 'Không có quyền xem ảnh'], 403);
+        }
+
+        $images = Images::where('MaNha', $houseId)->get();
+
+        return response()->json(['images' => $images]);
+    }
+
+
+    public function setThumbnail($imageId)
+    {
+        $image = Images::findOrFail($imageId);
+        $house = House::findOrFail($image->MaNha);
+        if ($house->MaNguoiDung !== Auth::id()) {
+            return response()->json(['message' => 'Không có quyền thao tác'], 403);
+        }
+
+        Images::where('MaNha', $house->MaNha)->update(['HinhDaiDien' => false]);
+        $image->HinhDaiDien = true;
+        $image->save();
+
+        return response()->json(['message' => 'Đã đặt làm ảnh đại diện']);
     }
 }
