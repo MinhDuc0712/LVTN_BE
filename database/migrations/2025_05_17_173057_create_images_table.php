@@ -4,24 +4,20 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::create('images', function (Blueprint $table) {
-             $table->id('MaHinhAnh');
+            $table->id('MaHinhAnh');
             $table->unsignedBigInteger('MaNha');
-            $table->string('ten_file', 255); 
+            $table->longText('DuongDanHinh')->nullable();
             $table->boolean('LaAnhDaiDien')->default(false);
             $table->timestamps();
 
-            $table->foreign('MaNha')
-                  ->references('MaNha')
-                  ->on('House')
-                  ->onDelete('cascade');
+            $table->foreign('MaNha')->references('MaNha')->on('houses')->onDelete('cascade');
         });
     }
 

@@ -15,59 +15,37 @@ class House extends Model
     protected $table = 'houses';
     protected $primaryKey = 'MaNha';
     public $timestamps = false;
-    protected $fillable = [
-        'TieuDe',
-        'Tinh_TP',
-        'Quan_Huyen',
-        'Phuong_Xa',
-        'Duong',
-        'DiaChi',
-        'Gia',
-        'SoPhongNgu',
-        'SoPhongTam',
-        'DienTich',
-        'SoTang',
-        'HinhAnh',
-        'TrangThai',
-        'NoiBat',
-        'MoTaChiTiet',
-        'NgayHetHan',
-        'MaNguoiDung',
-        'MaDanhMuc'
-    ];
-    
-  
+    protected $fillable = ['TieuDe', 'Tinh_TP', 'Quan_Huyen', 'Phuong_Xa', 'Duong', 'DiaChi', 'Gia', 'SoPhongNgu', 'SoPhongTam', 'DienTich', 'SoTang', 'HinhAnh', 'TrangThai', 'NoiBat', 'MoTaChiTiet', 'NgayHetHan', 'MaNguoiDung', 'MaDanhMuc'];
 
-public function scopeApproved($query)
-{
-    return $query->where('TrangThai', self::STATUS_APPROVED);
-}
+    public function scopeApproved($query)
+    {
+        return $query->where('TrangThai', self::STATUS_APPROVED);
+    }
 
-public function scopeByUser($query, $userId)
-{
-    return $query->where('MaNguoiDung', $userId);
-}
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('MaNguoiDung', $userId);
+    }
 
-public function getFullAddressAttribute()
-{
-    return "{$this->Duong}, {$this->Phuong_Xa}, {$this->Quan_Huyen}, {$this->Tinh_TP}";
-}
+    public function getFullAddressAttribute()
+    {
+        return "{$this->Duong}, {$this->Phuong_Xa}, {$this->Quan_Huyen}, {$this->Tinh_TP}";
+    }
     public function user()
     {
-return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');    }
+        return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');
+    }
     public function category()
     {
         return $this->belongsTo(Categories::class, 'MaDanhMuc', 'MaDanhMuc');
     }
 
     public function utilities()
-{
-    return $this->belongsToMany(Utilities::class, 'house_utility', 'MaNha', 'MaTienIch');
-}
-public function images()
-{
-    return $this->hasMany(Images::class, 'MaNha', 'MaNha');
-}
-
-    
+    {
+        return $this->belongsToMany(Utilities::class, 'house_utility', 'MaNha', 'MaTienIch');
+    }
+    public function images()
+    {
+        return $this->hasMany(Images::class, 'MaNha', 'MaNha');
+    }
 }
