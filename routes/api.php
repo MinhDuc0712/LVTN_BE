@@ -27,16 +27,16 @@ Route::prefix('user')->group(function () {
     Route::get('/categories/{id}', [CategoriesController::class, 'show']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
     Route::post('/houses', [HouseController::class, 'store']);
-//Route::get('/houses/payment/process/{id}', [HouseController::class, 'processPayment'])->name('houses.payment.process');
-      Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']); 
-    Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']); 
+    //Route::get('/houses/payment/process/{id}', [HouseController::class, 'processPayment'])->name('houses.payment.process');
+    Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']);
+    Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']);
 
-    Route::delete('/houses/{houseId}/images/{imageId}', [ImagesController::class, 'deleteHouseImage']); 
-    Route::post('/houses/{houseId}/images/{imageId}/set-main', [ImagesController::class, 'setMainImage']); 
+    Route::delete('/houses/{houseId}/images/{imageId}', [ImagesController::class, 'deleteHouseImage']);
+    Route::post('/houses/{houseId}/images/{imageId}/set-main', [ImagesController::class, 'setMainImage']);
 
-    Route::get('/images/{houseId}/list', [ImagesController::class, 'list']); 
-    Route::delete('/images/{imageId}', [ImagesController::class, 'destroy']); 
-    Route::post('/images/{imageId}/set-thumbnail', [ImagesController::class, 'setThumbnail']); 
+    Route::get('/images/{houseId}/list', [ImagesController::class, 'list']);
+    Route::delete('/images/{imageId}', [ImagesController::class, 'destroy']);
+    Route::post('/images/{imageId}/set-thumbnail', [ImagesController::class, 'setThumbnail']);
 });
 
 Route::prefix('admin')->group(function () {
@@ -46,7 +46,6 @@ Route::prefix('admin')->group(function () {
     Route::post('/user/{id}/ban', [UserController::class, 'ban']);
     Route::post('/user/{id}/unban', [UserController::class, 'unban']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::get('users/{identifier}', [UserController::class, 'findUser']);    
+    Route::get('users/{identifier}', [UserController::class, 'findUser']);
     Route::apiResource('roles', RoleController::class)->except(['show', 'edit']);
 });
-
