@@ -26,10 +26,20 @@ Route::prefix('user')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index']);
     Route::get('/categories/{id}', [CategoriesController::class, 'show']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
-    Route::post('/houses', [HouseController::class, 'store']);
-    //Route::get('/houses/payment/process/{id}', [HouseController::class, 'processPayment'])->name('houses.payment.process');
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/houses', [HouseController::class, 'store']);
+        Route::get('/me', function (Request $request) {
+            return response()->json([
+                'user' => $request->user(),
+                'MaNguoiDung' => $request->user()->MaNguoiDung,
+                'HoTen' => $request->user()->HoTen,
+                'SDT' => $request->user()->SDT,
+            ]);
+        });
+    });
     Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']);
     Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']);
+    //Route::get('/houses/payment/process/{id}', [HouseController::class, 'processPayment'])->name('houses.payment.process');
 
     Route::delete('/houses/{houseId}/images/{imageId}', [ImagesController::class, 'deleteHouseImage']);
     Route::post('/houses/{houseId}/images/{imageId}/set-main', [ImagesController::class, 'setMainImage']);

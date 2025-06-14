@@ -43,29 +43,28 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'SDT' => 'required|string',
-            'Password' => 'required|string',
-        ]);
-        $user = User::where('SDT', $request->SDT)->first();
+        'SDT' => 'required|string',
+        'Password' => 'required|string',
+    ]);
 
-        if (!$user || !Hash::check($request->Password, $user->Password)) {
-            return response()->json(['message' => 'Thông tin xác thực không hợp lệ'], 401);
-        }
+    $user = User::where('SDT', $request->SDT)->first();
 
-        if ($user->TrangThai === 'banned') {
-            return response()->json(['message' => 'Tài khoản của bạn đã bị khóa'], 403);
-        }
+    if (!$user || !\Hash::check($request->Password, $user->Password)) {
+        return response()->json(['message' => 'Thông tin xác thực không hợp lệ'], 401);
+    }
 
-        $roles = $user->roles()->pluck('TenQuyen')->toArray();
+    if ($user->TrangThai === 'banned') {
+        return response()->json(['message' => 'Tài khoản của bạn đã bị khóa'], 403);
+    }
 
-        $token = $user->createToken('API Token')->plainTextToken;
+    $token = $user->createToken('API Token')->plainTextToken;
 
-        return response()->json([
-            'message' => 'Đăng nhập thành công',
-            'token' => $token,
-            'user' => $user,
-            'roles' => $roles,
-        ]);
+    return response()->json([
+        'message' => 'Đăng nhập thành công',
+        'token' => $token,
+        'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT']),
+        'roles' => $user->roles()->pluck('TenQuyen'),
+    ]);
     }
 
     public function logout(Request $request)
