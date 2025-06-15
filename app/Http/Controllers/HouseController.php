@@ -100,33 +100,62 @@ class HouseController extends Controller
         ], 201);
 
     }
-    public function processPayment(Request $request, $id)
-    {
-        $house = House::findOrFail($id);
+   public function handlePayment(Request $request)
+{
+    $user = Auth::user();
 
-        if ($house->MaNguoiDung != Auth::id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+    $validated = $request->validate([
+        'houseId' => 'required|exists:houses,MaNha',
+        'planType' => 'required|in:normal,vip',
+        'duration' => 'required|integer|min:1',
+        'unit' => 'required|in:day,week,month',
+        'total' => 'required|numeric|min:0',
+    ]);
 
-        $paymentSuccess = $request->input('payment_success', false);
+    $house = House::where('MaNha', $validated['houseId'])
+                  ->where('MaNguoiDung', $user->MaNguoiDung)
+                  ->first();
 
-        if ($paymentSuccess) {
-            $house->TrangThai = 'Đang xử lý';
-            $house->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Thanh toán thành công! Tin đăng của bạn đang được xử lý.',
-                'redirect_url' => route('user.dashboard'),
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn có thể thanh toán sau trong mục quản lý tin đăng.',
-                'redirect_url' => route('user.dashboard'),
-            ]);
-        }
+    if (!$house) {
+        return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
     }
+
+    
+    if ($user->so_du < $validated['total']) {
+        return response()->json(['message' => 'Số dư không đủ để thanh toán'], 400);
+    }
+
+    
+    $user->so_du -= $validated['total'];
+    $user->save();
+
+    
+    $unitMap = [
+        'day' => 1,
+        'week' => 7,
+        'month' => 30,
+    ];
+
+    $days = $validated['duration'] * $unitMap[$validated['unit']];
+    $expiryDate = now()->addDays($days);
+
+   
+    $house->TrangThai = $validated['planType'] === 'vip'
+        ? House::STATUS_APPROVED
+        : House::STATUS_PROCESSING;
+
+    $house->NoiBat = $validated['planType'] === 'vip' ? 1 : 0;
+    $house->NgayHetHan = $expiryDate;
+    $house->save();
+
+    return response()->json([
+        'message' => 'Thanh toán thành công',
+        'so_du_moi' => $user->so_du,
+        'TrangThai' => $house->TrangThai,
+        'NoiBat' => $house->NoiBat,
+        'NgayHetHan' => $expiryDate,
+    ]);
+}
 
     public function show(House $house)
     {

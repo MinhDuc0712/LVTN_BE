@@ -34,7 +34,7 @@ class AuthController extends Controller
         return response()->json(
             [
                 'message' => 'Đăng ký thành công',
-                'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT']),
+                'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT','HinhDaiDien','so_du']),
             ],
             201,
         );
@@ -62,7 +62,7 @@ class AuthController extends Controller
     return response()->json([
         'message' => 'Đăng nhập thành công',
         'token' => $token,
-        'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT']),
+        'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT','HinhDaiDien','so_du']),
         'roles' => $user->roles()->pluck('TenQuyen'),
     ]);
     }
