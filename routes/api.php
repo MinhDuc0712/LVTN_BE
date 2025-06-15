@@ -34,16 +34,16 @@ Route::prefix('user')->group(function () {
                 'MaNguoiDung' => $request->user()->MaNguoiDung,
                 'HoTen' => $request->user()->HoTen,
                 'SDT' => $request->user()->SDT,
+                'so_du' => $request->user()->so_du,
+                'HinhDaiDien' => $request->user()->HinhDaiDien,
             ]);
         });
+        Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
     });
     Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']);
     Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']);
-    //Route::get('/houses/payment/process/{id}', [HouseController::class, 'processPayment'])->name('houses.payment.process');
-
     Route::delete('/houses/{houseId}/images/{imageId}', [ImagesController::class, 'deleteHouseImage']);
     Route::post('/houses/{houseId}/images/{imageId}/set-main', [ImagesController::class, 'setMainImage']);
-
     Route::get('/images/{houseId}/list', [ImagesController::class, 'list']);
     Route::delete('/images/{imageId}', [ImagesController::class, 'destroy']);
     Route::post('/images/{imageId}/set-thumbnail', [ImagesController::class, 'setThumbnail']);

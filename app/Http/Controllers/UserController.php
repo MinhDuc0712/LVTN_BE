@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class UserController extends Controller
 {
     /**
@@ -16,6 +16,7 @@ class UserController extends Controller
     {
         //
         $users = User::with('roles')->get();
+        
         return response()->json(
             $users->map(function ($user) {
                 return [
@@ -25,6 +26,7 @@ class UserController extends Controller
                     'SDT' => $user->SDT,
                     'HinhDaiDien' => $user->HinhDaiDien,
                     'DiaChi' => $user->DiaChi,
+                    'so_du' => $user->so_du,
                     'TrangThai' => $user->TrangThai,
                     'LyDoCam' => $user->LyDoCam,
                     'Role' => $user->role, // Sử dụng accessor getRoleAttribute
