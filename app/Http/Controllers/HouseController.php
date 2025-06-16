@@ -15,6 +15,8 @@ class HouseController extends Controller
     public function index()
     {
         //
+        $houses = House::all();
+        return response()->json($houses);
     }
 
     /**
@@ -90,72 +92,66 @@ class HouseController extends Controller
             Images::create([
                 'MaNha' => $house->MaNha,
                 'DuongDanHinh' => $base64Image,
-                'LaAnhDaiDien' => $index === 0
+                'LaAnhDaiDien' => $index === 0,
             ]);
         }
 
+        return response()->json(
+            [
+                'message' => 'Nhà và ảnh đã được đăng thành công',
+                'house' => $house->load('images'),
+            ],
+            201,
+        );
+    }
+    public function handlePayment(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'houseId' => 'required|exists:houses,MaNha',
+            'planType' => 'required|in:normal,vip',
+            'duration' => 'required|integer|min:1',
+            'unit' => 'required|in:day,week,month',
+            'total' => 'required|numeric|min:0',
+        ]);
+
+        $house = House::where('MaNha', $validated['houseId'])->where('MaNguoiDung', $user->MaNguoiDung)->first();
+
+        if (!$house) {
+            return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
+        }
+
+        if ($user->so_du < $validated['total']) {
+            return response()->json(['message' => 'Số dư không đủ để thanh toán'], 400);
+        }
+
+        $user->so_du -= $validated['total'];
+        $user->save();
+
+        $unitMap = [
+            'day' => 1,
+            'week' => 7,
+            'month' => 30,
+        ];
+
+        $days = $validated['duration'] * $unitMap[$validated['unit']];
+        $expiryDate = now()->addDays($days);
+
+        $house->TrangThai = $validated['planType'] === 'vip' ? House::STATUS_APPROVED : House::STATUS_PROCESSING;
+
+        $house->NoiBat = $validated['planType'] === 'vip' ? 1 : 0;
+        $house->NgayHetHan = $expiryDate;
+        $house->save();
+
         return response()->json([
-            'message' => 'Nhà và ảnh đã được đăng thành công',
-            'house' => $house->load('images')
-        ], 201);
-
+            'message' => 'Thanh toán thành công',
+            'so_du_moi' => $user->so_du,
+            'TrangThai' => $house->TrangThai,
+            'NoiBat' => $house->NoiBat,
+            'NgayHetHan' => $expiryDate,
+        ]);
     }
-   public function handlePayment(Request $request)
-{
-    $user = Auth::user();
-
-    $validated = $request->validate([
-        'houseId' => 'required|exists:houses,MaNha',
-        'planType' => 'required|in:normal,vip',
-        'duration' => 'required|integer|min:1',
-        'unit' => 'required|in:day,week,month',
-        'total' => 'required|numeric|min:0',
-    ]);
-
-    $house = House::where('MaNha', $validated['houseId'])
-                  ->where('MaNguoiDung', $user->MaNguoiDung)
-                  ->first();
-
-    if (!$house) {
-        return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
-    }
-
-    
-    if ($user->so_du < $validated['total']) {
-        return response()->json(['message' => 'Số dư không đủ để thanh toán'], 400);
-    }
-
-    
-    $user->so_du -= $validated['total'];
-    $user->save();
-
-    
-    $unitMap = [
-        'day' => 1,
-        'week' => 7,
-        'month' => 30,
-    ];
-
-    $days = $validated['duration'] * $unitMap[$validated['unit']];
-    $expiryDate = now()->addDays($days);
-
-   
-    $house->TrangThai = $validated['planType'] === 'vip'
-        ? House::STATUS_APPROVED
-        : House::STATUS_PROCESSING;
-
-    $house->NoiBat = $validated['planType'] === 'vip' ? 1 : 0;
-    $house->NgayHetHan = $expiryDate;
-    $house->save();
-
-    return response()->json([
-        'message' => 'Thanh toán thành công',
-        'so_du_moi' => $user->so_du,
-        'TrangThai' => $house->TrangThai,
-        'NoiBat' => $house->NoiBat,
-        'NgayHetHan' => $expiryDate,
-    ]);
-}
 
     public function show(House $house)
     {

@@ -9,6 +9,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HouseController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ImagesController;
+use App\Http\Controllers\RatingController;
+
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
@@ -47,6 +49,10 @@ Route::prefix('user')->group(function () {
     Route::get('/images/{houseId}/list', [ImagesController::class, 'list']);
     Route::delete('/images/{imageId}', [ImagesController::class, 'destroy']);
     Route::post('/images/{imageId}/set-thumbnail', [ImagesController::class, 'setThumbnail']);
+
+    Route::apiResource('/ratings', RatingController::class)->only(['index','store']);
+
+    Route::get('/houses', [HouseController::class, 'index']);
 });
 
 Route::prefix('admin')->group(function () {
