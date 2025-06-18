@@ -25,8 +25,6 @@ class UserController extends Controller
                     'Email' => $user->Email,
                     'SDT' => $user->SDT,
                     'HinhDaiDien' => $user->HinhDaiDien,
-                    'DiaChi' => $user->DiaChi,
-                    'so_du' => $user->so_du,
                     'TrangThai' => $user->TrangThai,
                     'LyDoCam' => $user->LyDoCam,
                     'Role' => $user->role, // Sử dụng accessor getRoleAttribute

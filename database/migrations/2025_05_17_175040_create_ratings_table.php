@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id('MaDanhGia');
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
             $table->foreignId('MaNha')->constrained('houses')->onDelete('cascade');
-            $table->integer('DiemDanhGia')->default(0);
-            $table->timestamps();
+            $table->tinyInteger('SoSao');
+            $table->text('NoiDung');
+            $table->timestamps('ThoiGian')->useCurrent();
+            $table->interger('LuotThich')->default(0);
         });
     }
 

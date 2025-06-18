@@ -9,6 +9,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HouseController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ImagesController;
+use App\Http\Controllers\RatingController;
+
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
@@ -40,9 +42,21 @@ Route::prefix('user')->group(function () {
         });
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
     });
+
+    Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']);
+    Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']);
+    Route::delete('/houses/{houseId}/images/{imageId}', [ImagesController::class, 'deleteHouseImage']);
+    Route::post('/houses/{houseId}/images/{imageId}/set-main', [ImagesController::class, 'setMainImage']);
+    Route::get('/images/{houseId}/list', [ImagesController::class, 'list']);
+    Route::delete('/images/{imageId}', [ImagesController::class, 'destroy']);
+    Route::post('/images/{imageId}/set-thumbnail', [ImagesController::class, 'setThumbnail']);
+
+    Route::apiResource('/ratings', RatingController::class)->only(['index','store']);
+
     Route::get('/houses', [HouseController::class, 'index']);
     Route::get('/houses/featured', [HouseController::class, 'featured']);
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
+
 });
 
 Route::prefix('admin')->group(function () {

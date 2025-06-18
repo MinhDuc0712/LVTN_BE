@@ -8,10 +8,26 @@ class Rating extends Model
 {
     //
     protected $table = 'ratings';
+    protected $primaryKey = 'MaDanhGia';
     protected $fillable = [
-        'MaDanhGia',
+
         'MaNha',
         'MaNguoiDung',
-        'DiemDanhGia',
+        'SoSao',
+        'NoiDung',
+        'ThoiGian',
+        'LuotThich',
     ];
+
+    public $timestamps = false;
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');
+    }
+    
+    public function house()
+    {
+        return $this->belongsTo(House::class, 'MaNha', 'MaNha');
+    }
 }

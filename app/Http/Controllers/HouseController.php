@@ -21,6 +21,9 @@ class HouseController extends Controller
 
     public function index(Request $request)
     {
+        //
+        $houses = House::all();
+
         $isPublic = !$request->user();
 
         $query = House::with(['images', 'utilities', 'user', 'category'])
@@ -144,14 +147,19 @@ class HouseController extends Controller
             Images::create([
                 'MaNha' => $house->MaNha,
                 'DuongDanHinh' => $base64Image,
-                'LaAnhDaiDien' => $index === 0
+                'LaAnhDaiDien' => $index === 0,
             ]);
         }
 
-        return response()->json([
-            'message' => 'Nhà và ảnh đã được đăng thành công',
-            'house' => $house->load('images')
-        ], 201);
+
+        return response()->json(
+            [
+                'message' => 'Nhà và ảnh đã được đăng thành công',
+                'house' => $house->load('images'),
+            ],
+            201,
+        );
+
 
     }
     public function handlePayment(Request $request)
