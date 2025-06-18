@@ -42,6 +42,7 @@ Route::prefix('user')->group(function () {
         });
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
     });
+
     Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']);
     Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']);
     Route::delete('/houses/{houseId}/images/{imageId}', [ImagesController::class, 'deleteHouseImage']);
@@ -53,6 +54,9 @@ Route::prefix('user')->group(function () {
     Route::apiResource('/ratings', RatingController::class)->only(['index','store']);
 
     Route::get('/houses', [HouseController::class, 'index']);
+    Route::get('/houses/featured', [HouseController::class, 'featured']);
+    Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
+
 });
 
 Route::prefix('admin')->group(function () {
