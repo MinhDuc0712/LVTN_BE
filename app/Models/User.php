@@ -35,4 +35,8 @@ class User extends Authenticatable
     {
         return $this->roles->first()->TenQuyen ?? 'guest';
     }
+    public function houses()
+{
+    return $this->hasMany(House::class, 'MaNguoiDung', 'MaNguoiDung');
+}
 }
