@@ -26,8 +26,7 @@ class HouseController extends Controller
 
         $isPublic = !$request->user();
 
-        $query = House::with(['images', 'utilities', 'user', 'category'])
-            ->where('TrangThai', self::STATUS_APPROVED);
+        $query = House::with(['images', 'utilities', 'user', 'category'])->where('TrangThai', self::STATUS_APPROVED);
 
         if ($isPublic) {
             $query->orderBy('NoiBat', 'desc');
@@ -59,19 +58,24 @@ class HouseController extends Controller
     public function getUserHouses(Request $request)
     {
         try {
-            $houses = $request->user()->houses()
+            $houses = $request
+                ->user()
+                ->houses()
                 ->with(['images', 'utilities', 'category'])
                 ->get();
 
             return response()->json([
                 'success' => true,
-                'data' => $houses
+                'data' => $houses,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Server error'
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Server error',
+                ],
+                500,
+            );
         }
     }
     /**
@@ -151,7 +155,6 @@ class HouseController extends Controller
             ]);
         }
 
-
         return response()->json(
             [
                 'message' => 'Nhà và ảnh đã được đăng thành công',
@@ -159,8 +162,6 @@ class HouseController extends Controller
             ],
             201,
         );
-
-
     }
     public function handlePayment(Request $request)
     {
@@ -174,23 +175,18 @@ class HouseController extends Controller
             'total' => 'required|numeric|min:0',
         ]);
 
-        $house = House::where('MaNha', $validated['houseId'])
-            ->where('MaNguoiDung', $user->MaNguoiDung)
-            ->first();
+        $house = House::where('MaNha', $validated['houseId'])->where('MaNguoiDung', $user->MaNguoiDung)->first();
 
         if (!$house) {
             return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
         }
 
-
         if ($user->so_du < $validated['total']) {
             return response()->json(['message' => 'Số dư không đủ để thanh toán'], 400);
         }
 
-
         $user->so_du -= $validated['total'];
         $user->save();
-
 
         $unitMap = [
             'day' => 1,
@@ -201,10 +197,7 @@ class HouseController extends Controller
         $days = $validated['duration'] * $unitMap[$validated['unit']];
         $expiryDate = now()->addDays($days);
 
-
-        $house->TrangThai = $validated['planType'] === 'vip'
-            ? House::STATUS_APPROVED
-            : House::STATUS_PROCESSING;
+        $house->TrangThai = $validated['planType'] === 'vip' ? House::STATUS_APPROVED : House::STATUS_PROCESSING;
 
         $house->NoiBat = $validated['planType'] === 'vip' ? 1 : 0;
         $house->NgayHetHan = $expiryDate;
@@ -223,19 +216,26 @@ class HouseController extends Controller
     {
         $house = House::with(['images', 'utilities', 'user', 'category'])
             ->where('MaNha', $id)
-            ->where('TrangThai', House::STATUS_APPROVED)
+            
+            // ->where('TrangThai', House::STATUS_APPROVED)
             ->first();
 
         if (!$house) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy nhà hoặc nhà chưa được phê duyệt'
-            ], 404);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Không tìm thấy nhà hoặc nhà chưa được phê duyệt',
+                ],
+                404,
+            );
         }
+        $soTinDang = House::where('MaNguoiDung', $house->MaNguoiDung)->count();
+
+        $house->user->so_tin_dang = $soTinDang;
 
         return response()->json([
             'success' => true,
-            'data' => $house
+            'data' => $house,
         ]);
     }
     public function getByCategory($categoryId)
@@ -249,7 +249,7 @@ class HouseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $houses
+            'data' => $houses,
         ]);
     }
     public function getFeaturedHouses()
@@ -263,7 +263,7 @@ class HouseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $houses
+            'data' => $houses,
         ]);
     }
     /**
