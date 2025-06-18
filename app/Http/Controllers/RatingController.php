@@ -15,9 +15,9 @@ class RatingController extends Controller
         //
         $maNha = $request->query('MaNha');
 
-        if (!$maNha) {
-            return response()->json(['message' => 'Thiếu mã nhà'], 400);
-        }
+        // if (!$maNha) {
+        //     return response()->json(['message' => 'Thiếu mã nhà'], 400);
+        // }
 
         $ratings = Rating::with('user')->where('MaNha', $maNha)->orderByDesc('ThoiGian')->get();
 

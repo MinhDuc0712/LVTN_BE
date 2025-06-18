@@ -53,9 +53,11 @@ Route::prefix('user')->group(function () {
 
     Route::apiResource('/ratings', RatingController::class)->only(['index','store']);
 
-    Route::get('/houses', [HouseController::class, 'index']);
+    // Route::get('/houses', [HouseController::class, 'index']);
+    // Route::get('/houses/{id}', [HouseController::class, 'show']);
     Route::get('/houses/featured', [HouseController::class, 'featured']);
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
+    Route::apiResource('/houses', HouseController::class)->only(['index', 'show']);
 
 });
 
