@@ -58,10 +58,18 @@ class HouseController extends Controller
     public function getUserHouses(Request $request)
     {
         try {
-            $houses = $request
-                ->user()
-                ->houses()
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không xác thực được người dùng',
+                ], 401);
+            }
+
+            $houses = $user->houses()
                 ->with(['images', 'utilities', 'category'])
+                ->orderBy('NgayDang', 'desc')
                 ->get();
 
             return response()->json([
@@ -69,15 +77,13 @@ class HouseController extends Controller
                 'data' => $houses,
             ]);
         } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Server error',
-                ],
-                500,
-            );
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage(),
+            ], 500);
         }
     }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -216,7 +222,7 @@ class HouseController extends Controller
     {
         $house = House::with(['images', 'utilities', 'user', 'category'])
             ->where('MaNha', $id)
-            
+
             // ->where('TrangThai', House::STATUS_APPROVED)
             ->first();
 
@@ -252,23 +258,11 @@ class HouseController extends Controller
             'data' => $houses,
         ]);
     }
-    public function getFeaturedHouses()
-    {
-        $houses = House::with(['images', 'utilities', 'user', 'category'])
-            ->where('NoiBat', 1)
-            ->where('TrangThai', House::STATUS_APPROVED)
-            ->orderBy('NgayDang', 'desc')
-            ->take(10)
-            ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $houses,
-        ]);
-    }
     /**
      * Show the form for editing the specified resource.
      */
+
     public function edit(House $house)
     {
         //
