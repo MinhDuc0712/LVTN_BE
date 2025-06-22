@@ -16,4 +16,8 @@ class Payments extends Model
         'PhiGiaoDich',
         'TongTien'
     ];
+    public function house()
+{
+    return $this->belongsTo(House::class, 'MaNha', 'MaNha');
+}
 }

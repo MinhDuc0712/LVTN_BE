@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\House;
 use App\Models\Images;
+use App\Models\Payments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -47,13 +48,6 @@ class HouseController extends Controller
         return response()->json($houses);
     }
 
-    public function showPublic($id)
-    {
-        return House::with(['images', 'utilities', 'user', 'category'])
-            ->where('MaNha', $id)
-            ->where('TrangThai', House::STATUS_APPROVED)
-            ->firstOrFail();
-    }
 
     public function getUserHouses(Request $request)
     {
@@ -181,7 +175,9 @@ class HouseController extends Controller
             'total' => 'required|numeric|min:0',
         ]);
 
-        $house = House::where('MaNha', $validated['houseId'])->where('MaNguoiDung', $user->MaNguoiDung)->first();
+        $house = House::where('MaNha', $validated['houseId'])
+            ->where('MaNguoiDung', $user->MaNguoiDung)
+            ->first();
 
         if (!$house) {
             return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
@@ -204,10 +200,17 @@ class HouseController extends Controller
         $expiryDate = now()->addDays($days);
 
         $house->TrangThai = $validated['planType'] === 'vip' ? House::STATUS_APPROVED : House::STATUS_PROCESSING;
-
         $house->NoiBat = $validated['planType'] === 'vip' ? 1 : 0;
         $house->NgayHetHan = $expiryDate;
         $house->save();
+
+        Payments::create([
+            'MaNguoiDung' => $user->MaNguoiDung,
+            'MaNha' => $house->MaNha,
+            'Voucher' => 0,
+            'PhiGiaoDich' => $validated['total'],
+            'TongTien' => $validated['total'],
+        ]);
 
         return response()->json([
             'message' => 'Thanh toán thành công',
@@ -262,6 +265,65 @@ class HouseController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+    public function getAllForAdmin(Request $request)
+{
+    $query = House::with(['images', 'utilities', 'user', 'category']);
+    
+    // Lọc theo trạng thái
+    if ($request->has('status')) {
+        $query->where('TrangThai', $request->status);
+    }
+    
+    // Tìm kiếm theo tiêu đề
+    if ($request->has('search')) {
+        $query->where('TieuDe', 'like', '%' . $request->search . '%');
+    }
+    
+    // Sắp xếp
+    $sortField = $request->get('sort_field', 'NgayDang');
+    $sortOrder = $request->get('sort_order', 'desc');
+    $query->orderBy($sortField, $sortOrder);
+    
+    // Phân trang
+    $perPage = $request->get('per_page', 10);
+    $houses = $query->paginate($perPage);
+    
+    return response()->json([
+        'success' => true,
+        'data' => $houses->items(),
+        'pagination' => [
+            'total' => $houses->total(),
+            'per_page' => $houses->perPage(),
+            'current_page' => $houses->currentPage(),
+            'last_page' => $houses->lastPage(),
+        ],
+    ]);
+}
+public function approve($id)
+{
+    $house = House::findOrFail($id);
+    $house->TrangThai = self::STATUS_APPROVED;
+    $house->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Bài đăng đã được phê duyệt',
+    ]);
+}
+
+public function reject(Request $request, $id)
+{
+    $house = House::findOrFail($id);
+    $house->TrangThai = 'Đã từ chối';
+    $house->LyDoTuChoi = $request->input('reason');
+    $house->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Bài đăng đã bị từ chối',
+        'data' => $house
+    ]);
+}
 
     public function edit(House $house)
     {
