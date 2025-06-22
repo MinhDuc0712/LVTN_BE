@@ -16,7 +16,7 @@ class UserController extends Controller
     {
         //
         $users = User::with('roles')->get();
-        
+
         return response()->json(
             $users->map(function ($user) {
                 return [
@@ -27,9 +27,9 @@ class UserController extends Controller
                     'HinhDaiDien' => $user->HinhDaiDien,
                     'TrangThai' => $user->TrangThai,
                     'LyDoCam' => $user->LyDoCam,
-                    'Role' => $user->role, // Sử dụng accessor getRoleAttribute
+                    'Role' => $user->roles->pluck('TenQuyen')->first(), // Lấy tên quyền đầu tiên
                 ];
-            }),
+            }), 
         );
     }
 
@@ -75,10 +75,30 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('roles')->where('MaNguoiDung', $id)->first();
+
+        if (!$user) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Không tìm thấy người dùng',
+                ],
+                404,
+            );
+        }
+
         return response()->json([
-            'HoTen' => $user->HoTen,
-            'SDT' => $user->SDT,
+            'success' => true,
+            'data' => [
+                'MaNguoiDung' => $user->MaNguoiDung,
+                'HoTen' => $user->HoTen,
+                'Email' => $user->Email,
+                'SDT' => $user->SDT,
+                'HinhDaiDien' => $user->HinhDaiDien,
+                'TrangThai' => $user->TrangThai,
+                'LyDoCam' => $user->LyDoCam,
+                'Role' => $user->role, // Sử dụng accessor getRoleAttribute
+            ],
         ]);
     }
 
@@ -113,7 +133,6 @@ class UserController extends Controller
 
         // Xóa role cũ (nếu có) và gán role mới
         $user->roles()->sync([$role->MaQuyen]);
-
 
         return response()->json(['message' => 'User updated successfully']);
     }

@@ -23,12 +23,12 @@ return new class extends Migration {
             $table->integer('SoTang')->nullable();
             $table->float('DienTich');
             $table->float('Gia');
-            $table->timestamp('NgayDang')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('NgayDang')->useCurrent();
             $table->date('NgayHetHan')->nullable();
             $table->enum('TrangThai', ['Đang chờ thanh toán', 'Đang xử lý', 'Đã duyệt', 'Đã từ chối', 'Đã cho thuê', 'Đã ẩn', 'Tin hết hạn', 'Đã xóa'])->default('Đang chờ thanh toán');
             $table->boolean('NoiBat')->default(false);
             $table->text('MoTaChiTiet')->nullable();
-            $table->longText('HinhAnh')->nullable();
+            // $table->longText('HinhAnh')->nullable();
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
             $table->foreignId('MaDanhMuc')->constrained('categories')->onDelete('cascade');
         });
