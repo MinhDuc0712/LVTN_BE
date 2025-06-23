@@ -22,32 +22,89 @@ class HouseController extends Controller
 
     public function index(Request $request)
     {
-        //
-        $houses = House::all();
+        // Khởi tạo query builder
+        $query = House::query()
+            ->with(['images', 'utilities', 'user', 'category'])
+            ->where('TrangThai', self::STATUS_APPROVED);
 
-        $isPublic = !$request->user();
-
-        $query = House::with(['images', 'utilities', 'user', 'category'])->where('TrangThai', self::STATUS_APPROVED);
-
-        if ($isPublic) {
-            $query->orderBy('NoiBat', 'desc');
-        } else {
-            $query->orderBy('NoiBat', 'desc')->orderBy('NgayDang', 'desc');
+        // Lọc theo giá
+        if ($request->filled('price')) {
+            switch ($request->price) {
+                case 'under-1m':
+                    $query->where('Gia', '<', 1000000);
+                    break;
+                case '1-2m':
+                    $query->whereBetween('Gia', [1000000, 2000000]);
+                    break;
+                case '2-3m':
+                    $query->whereBetween('Gia', [2000000, 3000000]);
+                    break;
+                case '3-5m':
+                    $query->whereBetween('Gia', [3000000, 5000000]);
+                    break;
+                case '5-7m':
+                    $query->whereBetween('Gia', [5000000, 7000000]);
+                    break;
+                case '7-10m':
+                    $query->whereBetween('Gia', [7000000, 10000000]);
+                    break;
+                case '10-15m':
+                    $query->whereBetween('Gia', [10000000, 15000000]);
+                    break;
+                case 'over-15m':
+                    $query->where('Gia', '>', 15000000);
+                    break;
+            }
         }
 
-        return $query->get();
+        // Lọc theo diện tích
+        if ($request->filled('area')) {
+            switch ($request->area) {
+                case 'under-20':
+                    $query->where('DienTich', '<', 20);
+                    break;
+                case '20-30':
+                    $query->whereBetween('DienTich', [20, 30]);
+                    break;
+                case '30-50':
+                    $query->whereBetween('DienTich', [30, 50]);
+                    break;
+                case '50-70':
+                    $query->whereBetween('DienTich', [50, 70]);
+                    break;
+                case '70-90':
+                    $query->whereBetween('DienTich', [70, 90]);
+                    break;
+                case 'over-90':
+                    $query->where('DienTich', '>', 90);
+                    break;
+            }
+        }
+
+        // Lọc theo tỉnh/thành phố
+        if ($request->filled('province')) {
+            $query->where('Tinh_TP', 'like', '%' . $request->province . '%');
+        }
+
+
+        $results = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $results,
+        ]);
     }
+
     public function featured()
     {
         $houses = House::with(['images', 'utilities', 'user', 'category'])
             ->where('TrangThai', House::STATUS_APPROVED)
-            ->where('NoiBat', 1)
-            ->orderBy('NgayDang', 'desc')
+            // ->where('NoiBat', 1)
+            // ->orderBy('NgayDang', 'desc')
             ->get();
 
         return response()->json($houses);
     }
-
 
     public function getUserHouses(Request $request)
     {
@@ -92,10 +149,12 @@ class HouseController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
         if (!$user) {
             return response()->json(['message' => 'Không xác thực được người dùng'], 401);
         }
-        $validator = Validator::make($request->all(), [
+
+        $validated = $request->validate([
             'TieuDe' => 'required|min:30|max:100',
             'Tinh_TP' => 'required|string|max:255',
             'Quan_Huyen' => 'required|string|max:255',
@@ -109,48 +168,25 @@ class HouseController extends Controller
             'Gia' => 'required|numeric|min:0',
             'MoTaChiTiet' => 'required|min:50|max:5000',
             'MaDanhMuc' => 'required|exists:categories,MaDanhMuc',
-            'images' => 'required|array',
+            'images' => 'required|array|min:1',
             'images.*' => 'string',
             'utilities' => 'nullable|array',
             'utilities.*' => 'exists:utilities,MaTienIch',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'errors' => $validator->errors(),
-                ],
-                422,
-            );
-        }
-        $firstImage = $request->images[0] ?? null;
+        // Tạo nhà
+        $house = House::create([...$validated, 'MaNguoiDung' => $user->MaNguoiDung]);
 
-        $house = House::create([
-            'TieuDe' => $request->TieuDe,
-            'Tinh_TP' => $request->Tinh_TP,
-            'Quan_Huyen' => $request->Quan_Huyen,
-            'Phuong_Xa' => $request->Phuong_Xa,
-            'Duong' => $request->Duong,
-            'DiaChi' => $request->DiaChi,
-            'SoPhongNgu' => $request->SoPhongNgu,
-            'SoPhongTam' => $request->SoPhongTam,
-            'SoTang' => $request->SoTang,
-            'DienTich' => $request->DienTich,
-            'Gia' => $request->Gia,
-            'MoTaChiTiet' => $request->MoTaChiTiet,
-            'MaNguoiDung' => $user->MaNguoiDung,
-            'MaDanhMuc' => $request->MaDanhMuc,
-            'HinhAnh' => $firstImage,
-        ]);
-        if ($request->has('utilities')) {
-            $house->utilities()->sync(array_map('intval', $request->utilities));
+        // Gắn tiện ích nếu có
+        if (!empty($validated['utilities'])) {
+            $house->utilities()->sync(array_map('intval', $validated['utilities']));
         }
-        foreach ($request->images as $index => $base64Image) {
+
+        // Thêm hình ảnh
+        foreach ($validated['images'] as $index => $url) {
             Images::create([
                 'MaNha' => $house->MaNha,
-                'DuongDanHinh' => $base64Image,
+                'DuongDanHinh' => $url,
                 'LaAnhDaiDien' => $index === 0,
             ]);
         }
@@ -163,6 +199,7 @@ class HouseController extends Controller
             201,
         );
     }
+
     public function handlePayment(Request $request)
     {
         $user = Auth::user();

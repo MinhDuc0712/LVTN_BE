@@ -34,7 +34,7 @@ class AuthController extends Controller
         return response()->json(
             [
                 'message' => 'Đăng ký thành công',
-                'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT','HinhDaiDien','so_du']),
+                'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT', 'HinhDaiDien', 'so_du']),
             ],
             201,
         );
@@ -43,28 +43,29 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-        'SDT' => 'required|string',
-        'Password' => 'required|string',
-    ]);
+            'SDT' => 'required|string',
+            'Password' => 'required|string',
+        ]);
 
-    $user = User::where('SDT', $request->SDT)->first();
+        $user = User::where('SDT', $request->SDT)->first();
 
-    if (!$user || !\Hash::check($request->Password, $user->Password)) {
-        return response()->json(['message' => 'Thông tin xác thực không hợp lệ'], 401);
-    }
+        if (!$user || !\Hash::check($request->Password, $user->Password)) {
+            return response()->json(['message' => 'Thông tin xác thực không hợp lệ'], 401);
+        }
 
-    if ($user->TrangThai === 'banned') {
-        return response()->json(['message' => 'Tài khoản của bạn đã bị khóa'], 403);
-    }
+        if ($user->TrangThai === 'Bị cấm') {
+            return response()->json(['message' => 'Tài khoản của bạn đã bị khóa'], 403);
+        }
+        $user->tokens()->delete();
+        
+        $token = $user->createToken('API Token')->plainTextToken;
 
-    $token = $user->createToken('API Token')->plainTextToken;
-
-    return response()->json([
-        'message' => 'Đăng nhập thành công',
-        'token' => $token,
-        'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT','HinhDaiDien','so_du']),
-        'roles' => $user->roles()->pluck('TenQuyen'),
-    ]);
+        return response()->json([
+            'message' => 'Đăng nhập thành công',
+            'token' => $token,
+            'user' => $user->only(['MaNguoiDung', 'HoTen', 'Email', 'SDT', 'HinhDaiDien', 'so_du']),
+            'roles' => $user->roles()->pluck('TenQuyen'),
+        ]);
     }
 
     public function logout(Request $request)
@@ -133,7 +134,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Người dùng không được xác thực'], 401);
         }
 
-        if ($user->TrangThai === 'banned') {
+        if ($user->TrangThai === 'Bị cấm') {
             return response()->json(['message' => 'Tài khoản của bạn đã bị khóa'], 403);
         }
 
@@ -143,18 +144,13 @@ class AuthController extends Controller
                 'Email' => 'sometimes|string|email|max:255|unique:users,Email,' . $user->MaNguoiDung . ',MaNguoiDung',
                 'SDT' => 'sometimes|string|max:15|unique:users,SDT,' . $user->MaNguoiDung . ',MaNguoiDung',
                 'DiaChi' => 'sometimes|string|max:255',
-                'avatarBase64' => 'sometimes|string', // Chấp nhận chuỗi base64
+                'HinhDaiDien' => 'nullable|url|max:255',
             ],
             [
                 'Email.unique' => 'Email đã được sử dụng bởi người khác.',
                 'SDT.unique' => 'Số điện thoại đã được sử dụng bởi người khác.',
             ],
         );
-
-        if (isset($data['avatarBase64'])) {
-            $data['HinhDaiDien'] = $data['avatarBase64']; // Cột HinhDaiDien trong DB sẽ chứa base64
-            unset($data['avatarBase64']); // Xóa khỏi mảng để không bị lưu trùng
-        }
 
         $user->update($data);
 

@@ -14,6 +14,8 @@ class ImagesController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+
     public function index()
     {
         //
@@ -64,6 +66,6 @@ class ImagesController extends Controller
      */
     public function destroy($imageId)
     {
-        
+
     }
 }
