@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Rating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RatingController extends Controller
 {
@@ -14,12 +16,22 @@ class RatingController extends Controller
     {
         //
         $maNha = $request->query('MaNha');
+        $user = Auth::user();
 
-        // if (!$maNha) {
-        //     return response()->json(['message' => 'Thiếu mã nhà'], 400);
-        // }
+        $ratings = Rating::with('user')
+            ->where('MaNha', $maNha)
+            ->orderByDesc('ThoiGian')
+            ->get()
+            ->map(function ($rating) use ($user) {
+                $rating->liked = false;
 
-        $ratings = Rating::with('user')->where('MaNha', $maNha)->orderByDesc('ThoiGian')->get();
+                if ($user) {
+                    $exists = DB::table('like_comment')->where('MaDanhGia', $rating->MaDanhGia)->where('MaNguoiDung', $user->MaNguoiDung)->exists();
+                    $rating->liked = $exists;
+                }
+
+                return $rating;
+            });
 
         return response()->json($ratings);
     }
@@ -38,6 +50,13 @@ class RatingController extends Controller
     public function store(Request $request)
     {
         //
+
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Không xác thực được người dùng'], 401);
+        }
+
         $data = $request->validate([
             'MaNha' => 'required|exists:houses,MaNha',
             'MaNguoiDung' => 'required|exists:users,MaNguoiDung',
@@ -80,6 +99,33 @@ class RatingController extends Controller
     public function update(Request $request, Rating $rating)
     {
         //
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Chưa đăng nhập'], 401);
+        }
+
+        $action = $request->input('action');
+
+        if ($action === 'like') {
+            // Thêm like
+            DB::table('like_comment')->updateOrInsert(['MaDanhGia' => $rating->MaDanhGia, 'MaNguoiDung' => $user->MaNguoiDung], ['created_at' => now(), 'updated_at' => now()]);
+            $likeCount = DB::table('like_comment')->where('MaDanhGia', $rating->MaDanhGia)->count();
+            $rating->LuotThich = $likeCount;
+            $rating->save();
+            return response()->json(['message' => 'Đã thích']);
+        }
+
+        if ($action === 'unlike') {
+            // Huỷ like
+            DB::table('like_comment')->where('MaDanhGia', $rating->MaDanhGia)->where('MaNguoiDung', $user->MaNguoiDung)->delete();
+            $likeCount = DB::table('like_comment')->where('MaDanhGia', $rating->MaDanhGia)->count();
+            $rating->LuotThich = $likeCount;
+            $rating->save();
+            return response()->json(['message' => 'Đã huỷ thích']);
+        }
+
+        return response()->json(['message' => 'Hành động không hợp lệ'], 400);
     }
 
     /**
@@ -88,5 +134,19 @@ class RatingController extends Controller
     public function destroy(Rating $rating)
     {
         //
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Chưa đăng nhập'], 401);
+        }
+        if ($rating->MaNguoiDung !== $user->MaNguoiDung) {
+            return response()->json(['message' => 'Bạn không có quyền xoá đánh giá này'], 403);
+        }
+        $rating->delete();
+        return response()->json(
+            [
+                'message' => 'Đánh giá đã được xoá thành công',
+            ],
+            200,
+        );
     }
 }

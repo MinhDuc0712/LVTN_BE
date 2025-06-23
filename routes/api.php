@@ -30,6 +30,7 @@ Route::prefix('user')->group(function () {
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/houses', [HouseController::class, 'store']);
+        // Route::apiResource('user', UserController::class);
         Route::get('/me', function (Request $request) {
             return response()->json([
                 'user' => $request->user(),
@@ -41,7 +42,10 @@ Route::prefix('user')->group(function () {
             ]);
         });
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
+        Route::apiResource('/ratings', RatingController::class);
     });
+    
+    // Route::get('/ratings', [RatingController::class, 'index']);
 
     Route::post('/houses/{houseId}/images', [ImagesController::class, 'uploadHouseImages']);
     Route::get('/houses/{houseId}/images', [ImagesController::class, 'getHouseImages']);
@@ -51,14 +55,11 @@ Route::prefix('user')->group(function () {
     Route::delete('/images/{imageId}', [ImagesController::class, 'destroy']);
     Route::post('/images/{imageId}/set-thumbnail', [ImagesController::class, 'setThumbnail']);
 
-    Route::apiResource('/ratings', RatingController::class)->only(['index','store']);
-
     // Route::get('/houses', [HouseController::class, 'index']);
     // Route::get('/houses/{id}', [HouseController::class, 'show']);
     Route::get('/houses/featured', [HouseController::class, 'featured']);
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
     Route::apiResource('/houses', HouseController::class)->only(['index', 'show']);
-
 });
 
 Route::prefix('admin')->group(function () {

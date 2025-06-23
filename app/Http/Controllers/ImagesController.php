@@ -17,70 +17,64 @@ class ImagesController extends Controller
     public function uploadHouseImages(Request $request, $houseId)
     {
         $request->validate([
-        'images' => 'required|array',
-        'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240' // 10MB
-    ]);
-
-    $house = House::findOrFail($houseId);
-
-    $uploadedImages = [];
-
-    foreach ($request->file('images') as $image) {
-        $fileName = Str::random(20) . '.' . $image->getClientOriginalExtension();
-        $path = $image->storeAs('public/houses/images', $fileName);
-
-        $imageModel = new Images([
-            'MaNha' => $house->MaNha,
-            'DuongDan' => Storage::url($path)
+            'images' => 'required|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB
         ]);
-        $imageModel->save();
 
-        $uploadedImages[] = $imageModel;
+        $house = House::findOrFail($houseId);
+
+        $uploadedImages = [];
+
+        foreach ($request->file('images') as $image) {
+            $fileName = Str::random(20) . '.' . $image->getClientOriginalExtension();
+            $path = $image->storeAs('public/houses/images', $fileName);
+
+            $imageModel = new Images([
+                'MaNha' => $house->MaNha,
+                'DuongDan' => Storage::url($path),
+            ]);
+            $imageModel->save();
+
+            $uploadedImages[] = $imageModel;
+        }
+
+        return response()->json([
+            'success' => true,
+            'images' => $uploadedImages,
+        ]);
     }
 
-    return response()->json([
-        'success' => true,
-        'images' => $uploadedImages
-    ]);
-}
+    public function getHouseImages($houseId)
+    {
+        $images = Images::where('MaNha', $houseId)
+            ->orderBy('LaAnhDaiDien', 'DESC')
+            ->orderBy('created_at', 'ASC')
+            ->get()
+            ->map(function ($image) {
+                return [
+                    'MaHinhAnh' => $image->MaHinhAnh,
+                    'url' => $image->DuongDanHinh,
+                    'LaAnhDaiDien' => $image->LaAnhDaiDien,
+                    'created_at' => $image->created_at->toDateTimeString(),
+                ];
+            });
 
-public function getHouseImages($houseId)
-{
-    $images = Images::where('MaNha', $houseId)
-        ->orderBy('LaAnhDaiDien', 'DESC')
-        ->orderBy('NgayTao', 'ASC')
-        ->get()
-        ->map(function ($image) {
-            return [
-                'MaHinhAnh' => $image->MaHinhAnh,
-                'url' => Storage::url('public/house_images/' . $image->ten_file),
-                'LaAnhDaiDien' => $image->LaAnhDaiDien,
-                'NgayTao' => $image->NgayTao
-            ];
-        });
-
-    return response()->json([
-        'success' => true,
-        'data' => $images
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'data' => $images,
+        ]);
+    }
 
     // Xóa ảnh
     public function deleteHouseImage($houseId, $imageId)
     {
-        $image = Images::where('MaNha', $houseId)
-            ->where('MaHinhAnh', $imageId)
-            ->firstOrFail();
-
-        // Xóa file vật lý
-        Storage::delete('public/house_images/' . $image->ten_file);
-        
+        $image = Images::where('MaNha', $houseId)->where('MaHinhAnh', $imageId)->firstOrFail();
         // Xóa record database
         $image->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Image deleted successfully'
+            'message' => 'Đã xóa ảnh thành công',
         ]);
     }
 
@@ -88,19 +82,16 @@ public function getHouseImages($houseId)
     public function setMainImage($houseId, $imageId)
     {
         // Bỏ đặt tất cả ảnh đại diện cũ
-        Images::where('MaNha', $houseId)
-            ->update(['LaAnhDaiDien' => false]);
-        
+        Images::where('MaNha', $houseId)->update(['LaAnhDaiDien' => false]);
+
         // Đặt ảnh mới làm đại diện
-        $image = Images::where('MaNha', $houseId)
-            ->where('MaHinhAnh', $imageId)
-            ->firstOrFail();
-        
+        $image = Images::where('MaNha', $houseId)->where('MaHinhAnh', $imageId)->firstOrFail();
+
         $image->update(['LaAnhDaiDien' => true]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Main image updated successfully'
+            'message' => 'Đã đặt ảnh làm đại diện',
         ]);
     }
     public function index()
@@ -178,7 +169,6 @@ public function getHouseImages($houseId)
 
         return response()->json(['images' => $images]);
     }
-
 
     public function setThumbnail($imageId)
     {
