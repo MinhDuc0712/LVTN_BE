@@ -12,6 +12,7 @@ class House extends Model
     const STATUS_REJECTED = 'Đã từ chối';
     const STATUS_RENTED = 'Đã cho thuê';
     const STATUS_HIDDEN = 'Đã ẩn';
+    const STATUS_EXPIRED = 'Tin hết hạn';
     protected $table = 'houses';
     protected $primaryKey = 'MaNha';
     public $timestamps = false;
