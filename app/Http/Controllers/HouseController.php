@@ -86,6 +86,14 @@ class HouseController extends Controller
             $query->where('Tinh_TP', 'like', '%' . $request->province . '%');
         }
 
+        // Lọc theo quận/huyện
+        if ($request->filled('district')) {
+            $query->where('Quan_Huyen', 'like', '%' . $request->district . '%');
+        }
+
+        if ($request->filled('ward')) {
+            $query->where('Phuong_Xa', 'like', '%' . $request->ward . '%');
+        }
 
         $results = $query->get();
 
@@ -112,13 +120,17 @@ class HouseController extends Controller
             $user = $request->user();
 
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không xác thực được người dùng',
-                ], 401);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'Không xác thực được người dùng',
+                    ],
+                    401,
+                );
             }
 
-            $houses = $user->houses()
+            $houses = $user
+                ->houses()
                 ->with(['images', 'utilities', 'category'])
                 ->orderBy('NgayDang', 'desc')
                 ->get();
@@ -128,10 +140,13 @@ class HouseController extends Controller
                 'data' => $houses,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi server: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Lỗi server: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 
@@ -212,9 +227,7 @@ class HouseController extends Controller
             'total' => 'required|numeric|min:0',
         ]);
 
-        $house = House::where('MaNha', $validated['houseId'])
-            ->where('MaNguoiDung', $user->MaNguoiDung)
-            ->first();
+        $house = House::where('MaNha', $validated['houseId'])->where('MaNguoiDung', $user->MaNguoiDung)->first();
 
         if (!$house) {
             return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
@@ -303,64 +316,64 @@ class HouseController extends Controller
      * Show the form for editing the specified resource.
      */
     public function getAllForAdmin(Request $request)
-{
-    $query = House::with(['images', 'utilities', 'user', 'category']);
-    
-    // Lọc theo trạng thái
-    if ($request->has('status')) {
-        $query->where('TrangThai', $request->status);
+    {
+        $query = House::with(['images', 'utilities', 'user', 'category']);
+
+        // Lọc theo trạng thái
+        if ($request->has('status')) {
+            $query->where('TrangThai', $request->status);
+        }
+
+        // Tìm kiếm theo tiêu đề
+        if ($request->has('search')) {
+            $query->where('TieuDe', 'like', '%' . $request->search . '%');
+        }
+
+        // Sắp xếp
+        $sortField = $request->get('sort_field', 'NgayDang');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortField, $sortOrder);
+
+        // Phân trang
+        $perPage = $request->get('per_page', 10);
+        $houses = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $houses->items(),
+            'pagination' => [
+                'total' => $houses->total(),
+                'per_page' => $houses->perPage(),
+                'current_page' => $houses->currentPage(),
+                'last_page' => $houses->lastPage(),
+            ],
+        ]);
     }
-    
-    // Tìm kiếm theo tiêu đề
-    if ($request->has('search')) {
-        $query->where('TieuDe', 'like', '%' . $request->search . '%');
+    public function approve($id)
+    {
+        $house = House::findOrFail($id);
+        $house->TrangThai = self::STATUS_APPROVED;
+        $house->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Bài đăng đã được phê duyệt',
+        ]);
     }
-    
-    // Sắp xếp
-    $sortField = $request->get('sort_field', 'NgayDang');
-    $sortOrder = $request->get('sort_order', 'desc');
-    $query->orderBy($sortField, $sortOrder);
-    
-    // Phân trang
-    $perPage = $request->get('per_page', 10);
-    $houses = $query->paginate($perPage);
-    
-    return response()->json([
-        'success' => true,
-        'data' => $houses->items(),
-        'pagination' => [
-            'total' => $houses->total(),
-            'per_page' => $houses->perPage(),
-            'current_page' => $houses->currentPage(),
-            'last_page' => $houses->lastPage(),
-        ],
-    ]);
-}
-public function approve($id)
-{
-    $house = House::findOrFail($id);
-    $house->TrangThai = self::STATUS_APPROVED;
-    $house->save();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Bài đăng đã được phê duyệt',
-    ]);
-}
+    public function reject(Request $request, $id)
+    {
+        $house = House::findOrFail($id);
+        $house->TrangThai = 'Đã từ chối';
+        $house->LyDoTuChoi = $request->input('reason');
+        $house->save();
 
-public function reject(Request $request, $id)
-{
-    $house = House::findOrFail($id);
-    $house->TrangThai = 'Đã từ chối';
-    $house->LyDoTuChoi = $request->input('reason');
-    $house->save();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Bài đăng đã bị từ chối',
-        'data' => $house
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'message' => 'Bài đăng đã bị từ chối',
+            'data' => $house,
+        ]);
+    }
 
     public function edit(House $house)
     {

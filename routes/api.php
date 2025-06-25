@@ -11,6 +11,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ImagesController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\PaymentsController;
+use App\Http\Controllers\FavouriteHouseController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -48,6 +49,7 @@ Route::prefix('user')->group(function () {
         // Route::get('/houses/{id}', [HouseController::class, 'show']);
         // Route::put('/houses/{id}', [HouseController::class, 'update']);
         Route::apiResource('/ratings', RatingController::class);
+        Route::apiResource('/favorites', FavouriteHouseController::class);
     });
     
     // Route::get('/ratings', [RatingController::class, 'index'])

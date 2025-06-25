@@ -16,7 +16,7 @@ class Images extends Model
     //     return asset('storage/house_images/' . $this->ten_file);
     // }
 
-    public function houses()
+    public function house()
     {
         return $this->belongsTo(House::class, 'MaNha', 'MaNha');
     }
