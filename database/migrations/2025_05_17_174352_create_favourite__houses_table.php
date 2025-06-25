@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('favourite__houses', function (Blueprint $table) {
+        Schema::create('favourite_houses', function (Blueprint $table) {
             $table->id('MaYeuThich');
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
             $table->foreignId('MaNha')->constrained('houses')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('favourite__houses');
+        Schema::dropIfExists('favourite_houses');
     }
 };

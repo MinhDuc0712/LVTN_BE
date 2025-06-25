@@ -87,6 +87,14 @@ class HouseController extends Controller
             $query->where('Tinh_TP', 'like', '%' . $request->province . '%');
         }
 
+        // Lọc theo quận/huyện
+        if ($request->filled('district')) {
+            $query->where('Quan_Huyen', 'like', '%' . $request->district . '%');
+        }
+
+        if ($request->filled('ward')) {
+            $query->where('Phuong_Xa', 'like', '%' . $request->ward . '%');
+        }
 
         $results = $query->get();
 
@@ -110,7 +118,6 @@ class HouseController extends Controller
     public function getUserHouses(Request $request)
     {
         $user = $request->user();
-
         $houses = $user->houses()
             ->with(['images', 'utilities', 'category'])
             ->orderBy('NgayDang', 'desc')
@@ -126,6 +133,7 @@ class HouseController extends Controller
                 $house->save();
             }
         }
+
 
         $updatedHouses = $user->houses()
             ->with(['images', 'utilities', 'category'])
@@ -217,9 +225,7 @@ class HouseController extends Controller
             'total' => 'required|numeric|min:0',
         ]);
 
-        $house = House::where('MaNha', $validated['houseId'])
-            ->where('MaNguoiDung', $user->MaNguoiDung)
-            ->first();
+        $house = House::where('MaNha', $validated['houseId'])->where('MaNguoiDung', $user->MaNguoiDung)->first();
 
         if (!$house) {
             return response()->json(['message' => 'Không tìm thấy bài đăng hoặc không có quyền'], 403);
