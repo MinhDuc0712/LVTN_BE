@@ -45,9 +45,12 @@ Route::prefix('user')->group(function () {
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
         Route::get('/payments', [PaymentsController::class, 'getUserPayments']);
         Route::get('/houses/user-posts', [HouseController::class, 'getUserHouses']);
+        Route::put('/houses/{id}/hide', [HouseController::class, 'hide']);
+        Route::put('/houses/{id}/relist', [HouseController::class, 'relist']);
         // Route::get('/houses/{id}', [HouseController::class, 'show']);
         // Route::put('/houses/{id}', [HouseController::class, 'update']);
         Route::apiResource('/ratings', RatingController::class);
+        
     });
     
     // Route::get('/ratings', [RatingController::class, 'index'])
