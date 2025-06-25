@@ -16,6 +16,7 @@ class HouseController extends Controller
     const STATUS_REJECTED = 'Đã từ chối';
     const STATUS_RENTED = 'Đã cho thuê';
     const STATUS_HIDDEN = 'Đã ẩn';
+    const STATUS_EXPIRED = 'Tin hết hạn';
     /**
      * Display a listing of the resource.
      */
@@ -116,39 +117,36 @@ class HouseController extends Controller
 
     public function getUserHouses(Request $request)
     {
-        try {
-            $user = $request->user();
+        $user = $request->user();
+        $houses = $user->houses()
+            ->with(['images', 'utilities', 'category'])
+            ->orderBy('NgayDang', 'desc')
+            ->get();
 
-            if (!$user) {
-                return response()->json(
-                    [
-                        'success' => false,
-                        'message' => 'Không xác thực được người dùng',
-                    ],
-                    401,
-                );
+        foreach ($houses as $house) {
+            if (
+                $house->TrangThai === House::STATUS_APPROVED &&
+                $house->NgayHetHan &&
+                now()->gt($house->NgayHetHan)
+            ) {
+                $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
+                $house->save();
             }
-
-            $houses = $user
-                ->houses()
-                ->with(['images', 'utilities', 'category'])
-                ->orderBy('NgayDang', 'desc')
-                ->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $houses,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Lỗi server: ' . $e->getMessage(),
-                ],
-                500,
-            );
         }
+
+
+        $updatedHouses = $user->houses()
+            ->with(['images', 'utilities', 'category'])
+            ->orderBy('NgayDang', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $updatedHouses,
+        ]);
     }
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -371,8 +369,58 @@ class HouseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Bài đăng đã bị từ chối',
-            'data' => $house,
+            'data' => $house
         ]);
+    }
+    public function hide($id)
+    {
+        $house = House::findOrFail($id);
+
+        if ($house->TrangThai !== self::STATUS_APPROVED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ có thể ẩn bài đăng đang ở trạng thái Đã duyệt',
+            ], 400);
+        }
+
+        $house->TrangThai = self::STATUS_HIDDEN;
+        $house->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Bài đăng đã được ẩn',
+            'data' => $house
+        ]);
+    }
+    public function relist($id)
+    {
+        $user = Auth::user();
+        $house = House::where('MaNguoiDung', $user->MaNguoiDung)->find($id);
+
+        if (!$house) {
+            return response()->json(['message' => 'Không tìm thấy bài đăng'], 404);
+        }
+
+        if ($house->TrangThai === self::STATUS_HIDDEN) {
+            // Nếu đang ẩn và còn hạn thì cho duyệt lại
+            if (now()->lessThanOrEqualTo($house->NgayHetHan)) {
+                $house->TrangThai = self::STATUS_APPROVED;
+                $house->save();
+                return response()->json(['message' => 'Đăng lại thành công (từ trạng thái ẩn)']);
+            } else {
+                return response()->json(['message' => 'Tin đã hết hạn, vui lòng thanh toán lại'], 400);
+            }
+        }
+
+        if ($house->TrangThai === self::STATUS_EXPIRED) {
+            // Nếu hết hạn thì cho phép thanh toán lại
+            return response()->json([
+                'message' => 'Tin đã hết hạn, bạn cần thanh toán lại để đăng lại',
+                'require_payment' => true,
+            ], 200);
+        }
+
+        return response()->json(['message' => 'Chỉ có thể đăng lại tin đã ẩn hoặc hết hạn'], 400);
     }
 
     public function edit(House $house)
