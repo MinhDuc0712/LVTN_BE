@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Favourite_House;
+use App\Models\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,47 +14,35 @@ class FavouriteHouseController extends Controller
      */
     public function index()
     {
-        try {
-            $userId = Auth::id();
-            $favoriteHouses = Favourite_House::where('MaNguoiDung', $userId)
-                ->with(['house' => fn($query) => $query->with(['images', 'user', 'category'])])
-                ->get()
-                ->map(
-                    fn($favorite) => [
-                        'favorite_id' => $favorite->MaYeuThich,
-                        'id' => $favorite->house->MaNha,
-                        'title' => $favorite->house->TieuDe,
-                        'price' => $favorite->house->Gia,
-                        'area' => $favorite->house->DienTich,
-                        'district' => $favorite->house->Quan_Huyen,
-                        'city' => $favorite->house->Tinh_TP,
-                        'address' => $favorite->house->DiaChi,
-                        'description' => $favorite->house->MoTa,
-                        'posted_at' => date('d/m/Y H:i', strtotime($favorite->house->NgayDang)),
-                        'saved_at' => date('d/m/Y H:i', strtotime($favorite->created_at)),
-                        'contact' => $favorite->house->user->SDT ?? '',
-                        'poster_name' => $favorite->house->user->HoTen ?? '',
-                        'type' => $favorite->house->category->name ?? '',
-                        'image' => $favorite->house->images->first()->DuongDanHinh ?? '',
-                    ],
-                );
+        $user = Auth::user();
 
-            return response()->json(
-                [
-                    'data' => $favoriteHouses,
-                    'meta' => ['count' => $favoriteHouses->count()],
-                ],
-                200,
-            );
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'error' => 'Không thể lấy danh sách yêu thích',
-                    'message' => $e->getMessage(),
-                ],
-                500,
-            );
+        if(!$user){
+            return response()-> json(['message' => 'You are not logged in'], 401);
         }
+
+        $favoriteHouses = Favourite_House::where('MaNguoiDung', $user->MaNguoiDung)
+            ->with('house', 'user', 'house.images')
+            ->get()
+            ->map(function ($favorite) {
+                return [
+                    'favorite_id' => $favorite->MaYeuThich,
+                    'id' => $favorite->house->MaNha,
+                    'title' => $favorite->house->TieuDe,
+                    'price' => $favorite->house->Gia,
+                    'area' => $favorite->house->DienTich,
+                    'district' => $favorite->house->Quan_Huyen,
+                    'city' => $favorite->house->Tinh_TP,
+                    'address' => $favorite->house->DiaChi,
+                    'description' => $favorite->house->MoTa,
+                    'posted_at' => $favorite->house->NgayDang,
+                    'saved_at' => $favorite->created_at->format('d-m-Y H:i:s'),
+                    'contact' => $favorite->house->user->MaNguoiDung,
+                    'poster_name' => $favorite->house->user->HoTen ?? '',
+                    'type' => $favorite->house->category->name ?? '',
+                    'image' => $favorite->house->images->firstWhere('LaAnhDaiDien', true)?->DuongDanHinh ?? '',
+                ];
+            });
+        return response()->json(['data' => $favoriteHouses], 200);
     }
 
     /**
@@ -69,62 +58,22 @@ class FavouriteHouseController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $request->validate([
-                'MaNha' => 'required|exists:houses,MaNha',
-            ]);
-
-            $userId = Auth::id();
-            $houseId = $request->MaNha;
-
-            if (Favourite_House::where('MaNguoiDung', $userId)->where('MaNha', $houseId)->exists()) {
-                $favorite = Favourite_House::where('MaNguoiDung', $userId)->where('MaNha', $houseId)->first();
-                return response()->json(
-                    [
-                        'data' => [
-                            'favorite_id' => $favorite->MaYeuThich,
-                            'id' => $houseId,
-                            'saved_at' => date('d/m/Y H:i', strtotime($favorite->created_at)),
-                        ],
-                        'message' => 'Nhà đã có trong danh sách yêu thích',
-                    ],
-                    200,
-                );
-            }
-
-            $favorite = Favourite_House::create([
-                'MaNha' => $houseId,
-                'MaNguoiDung' => $userId,
-            ]);
-
-            return response()->json(
-                [
-                    'data' => [
-                        'favorite_id' => $favorite->MaYeuThich,
-                        'id' => $houseId,
-                        'saved_at' => date('d/m/Y H:i', strtotime($favorite->created_at)),
-                    ],
-                    'message' => 'Đã thêm vào danh sách yêu thích',
-                ],
-                201,
-            );
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(
-                [
-                    'error' => 'Dữ liệu không hợp lệ',
-                    'message' => $e->errors(),
-                ],
-                422,
-            );
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'error' => 'Không thể thêm yêu thích',
-                    'message' => $e->getMessage(),
-                ],
-                500,
-            );
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
         }
+        $maNha = request('MaNha');
+
+        $houseExists = House::where('MaNha', $maNha)->exists();
+        if (!$houseExists) {
+            return response()->json(['error' => 'Mã nhà không tồn tại'], 400);
+        }
+
+        $favorite = Favourite_House::create([
+            'MaNha' => $maNha,
+            'MaNguoiDung' => $user->MaNguoiDung,
+        ]);
+        return response()->json(['data' => $favorite, 'message' => 'Đã thêm vào danh sách yêu thích'], 201);
     }
 
     /**
@@ -132,53 +81,7 @@ class FavouriteHouseController extends Controller
      */
     public function show($favoriteId)
     {
-        try {
-            $userId = Auth::user();
-            $favorite = Favourite_House::where('MaYeuThich', $favoriteId)
-                ->where('MaNguoiDung', $userId)
-                ->with(['house' => fn($query) => $query->with(['images', 'user', 'category'])])
-                ->first();
-
-            if (!$favorite) {
-                return response()->json(
-                    [
-                        'error' => 'Không tìm thấy yêu thích',
-                    ],
-                    404,
-                );
-            }
-
-            return response()->json(
-                [
-                    'data' => [
-                        'favorite_id' => $favorite->MaYeuThich,
-                        'id' => $favorite->house->MaNha,
-                        'title' => $favorite->house->TieuDe,
-                        'price' => $favorite->house->Gia,
-                        'area' => $favorite->house->DienTich,
-                        'district' => $favorite->house->Quan_Huyen,
-                        'city' => $favorite->house->Tinh_TP,
-                        'address' => $favorite->house->DiaChi,
-                        'description' => $favorite->house->MoTa,
-                        'posted_at' => date('d/m/Y H:i', strtotime($favorite->house->NgayDang)),
-                        'saved_at' => date('d/m/Y H:i', strtotime($favorite->created_at)),
-                        'contact' => $favorite->house->user->SDT ?? '',
-                        'poster_name' => $favorite->house->user->HoTen ?? '',
-                        'type' => $favorite->house->category->name ?? '',
-                        'image' => $favorite->house->images->first()->DuongDanHinh ?? '',
-                    ],
-                ],
-                200,
-            );
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'error' => 'Không thể lấy thông tin yêu thích',
-                    'message' => $e->getMessage(),
-                ],
-                500,
-            );
-        }
+        //
     }
 
     /**
@@ -194,35 +97,29 @@ class FavouriteHouseController extends Controller
      */
     public function update(Request $request, $favoriteId)
     {
-        try {
-            $userId = Auth::id();
-            $action = $request->input('action');
-
-            $favorite = Favourite_House::where('MaYeuThich', $favoriteId)->where('MaNguoiDung', $userId)->first();
-
-            if (!$favorite) {
-                return response()->json(['message' => 'Không có quyền thao tác'], 403);
-            }
-
-            if ($action === 'like') {
-                return response()->json(['message' => 'Đã tồn tại trong danh sách yêu thích']);
-            }
-
-            if ($action === 'unlike') {
-                $favorite->delete();
-                return response()->json(['message' => 'Đã xóa khỏi danh sách yêu thích']);
-            }
-
-            return response()->json(['message' => 'Hành động không hợp lệ'], 400);
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'message' => 'Lỗi khi xử lý yêu thích',
-                    'error' => $e->getMessage(),
-                ],
-                500,
-            );
+        $userId = Auth::user();
+        if (!$userId) {
+            return response()->json(['error' => 'User không tồn tại'], 404);
         }
+        $action = $request->input('action');
+
+        $favorite = Favourite_House::where('MaYeuThich', $favoriteId)->where('MaNguoiDung', $userId->MaNguoiDung)->first();
+
+        if (!$favorite) {
+            return response()->json(['message' => 'Không có quyền thao tác'], 403);
+        }
+
+        if ($action === 'like') {
+            return response()->json(['message' => 'Đã tồn tại trong danh sách yêu thích']);
+        }
+
+        if ($action === 'unlike') {
+            $favorite->delete();
+            return response()->json(['message' => 'Đã xóa khỏi danh sách yêu thích']);
+        }
+
+        return response()->json(['message' => 'Hành động không hợp lệ'], 400);
+
     }
 
     /**
@@ -230,14 +127,14 @@ class FavouriteHouseController extends Controller
      */
     public function destroy($favoriteId)
     {
-        try {
-            $userId = Auth::id();
-            $favorite = Favourite_House::where('MaYeuThich', $favoriteId)->where('MaNguoiDung', $userId)->first();
+
+            $userId = Auth::user();
+            $favorite = Favourite_House::where('MaYeuThich', $favoriteId)->where('MaNguoiDung', $userId->MaNguoiDung)->first();
 
             if (!$favorite) {
                 return response()->json(
                     [
-                        'error' => 'Không tìm thấy yêu thích',
+                        'error' => 'Không tìm thấy bài đăng yêu thích',
                     ],
                     404,
                 );
@@ -251,14 +148,5 @@ class FavouriteHouseController extends Controller
                 ],
                 204,
             );
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'error' => 'Không thể xóa yêu thích',
-                    'message' => $e->getMessage(),
-                ],
-                500,
-            );
-        }
     }
 }

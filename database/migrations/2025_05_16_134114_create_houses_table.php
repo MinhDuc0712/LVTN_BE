@@ -13,10 +13,10 @@ return new class extends Migration {
         Schema::create('houses', function (Blueprint $table) {
             $table->id('MaNha');
             $table->string('TieuDe');
-            $table->string('Tinh_TP');
-            $table->string('Quan_Huyen');
-            $table->string('Phuong_Xa');
-            $table->string('Duong')->nullable();
+            // $table->string('Tinh_TP');
+            // $table->string('Quan_Huyen');
+            // $table->string('Phuong_Xa');
+            // $table->string('Duong')->nullable();
             $table->string('DiaChi');
             $table->integer('SoPhongNgu');
             $table->integer('SoPhongTam');
@@ -31,6 +31,7 @@ return new class extends Migration {
             // $table->longText('HinhAnh')->nullable();
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
             $table->foreignId('MaDanhMuc')->constrained('categories')->onDelete('cascade');
+            
         });
     }
 

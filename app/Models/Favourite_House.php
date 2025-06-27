@@ -9,6 +9,7 @@ class Favourite_House extends Model
     //
     protected $table = 'favourite_houses';
     protected $primaryKey = 'MaYeuThich';
+    public $timestamps = true;
     protected $fillable = ['MaYeuThich', 'MaNha', 'MaNguoiDung'];
 
     public function house()
