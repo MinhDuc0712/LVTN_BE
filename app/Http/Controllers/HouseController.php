@@ -84,16 +84,16 @@ class HouseController extends Controller
 
         // Lọc theo tỉnh/thành phố
         if ($request->filled('province')) {
-            $query->where('Tinh_TP', 'like', '%' . $request->province . '%');
+            $query->where('DiaChi', 'like', '%' . $request->province . '%');
         }
 
         // Lọc theo quận/huyện
         if ($request->filled('district')) {
-            $query->where('Quan_Huyen', 'like', '%' . $request->district . '%');
+            $query->where('DiaChi', 'like', '%' . $request->district . '%');
         }
 
         if ($request->filled('ward')) {
-            $query->where('Phuong_Xa', 'like', '%' . $request->ward . '%');
+            $query->where('DiaChi', 'like', '%' . $request->ward . '%');
         }
 
         $results = $query->get();
@@ -169,10 +169,10 @@ class HouseController extends Controller
 
         $validated = $request->validate([
             'TieuDe' => 'required|min:30|max:100',
-            'Tinh_TP' => 'required|string|max:255',
-            'Quan_Huyen' => 'required|string|max:255',
-            'Phuong_Xa' => 'required|string|max:255',
-            'Duong' => 'nullable|string|max:255',
+            // 'Tinh_TP' => 'required|string|max:255',
+            // 'Quan_Huyen' => 'required|string|max:255',
+            // 'Phuong_Xa' => 'required|string|max:255',
+            // 'Duong' => 'nullable|string|max:255',
             'DiaChi' => 'required|string|max:255',
             'SoPhongNgu' => 'required|integer|min:0',
             'SoPhongTam' => 'required|integer|min:0',
@@ -431,9 +431,61 @@ class HouseController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, House $house)
+    public function update(Request $request, $id)
     {
         //
+        $user = Auth::user();
+        $house = House::where('MaNha', $id)->where('MaNguoiDung', $user->MaNguoiDung)->first();
+
+        if (!$house) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy bài đăng hoặc bạn không có quyền chỉnh sửa'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'TieuDe' => 'required|min:30|max:100',
+            // 'Tinh_TP' => 'required|string Stuart',
+            // 'Quan_Huyen' => 'required|string|max:255',
+            // 'Phuong_Xa' => 'required|string|max:255',
+            // 'Duong' => 'nullable|string|max:255',
+            'DiaChi' => 'required|string|max:255',
+            'SoPhongNgu' => 'required|integer|min:0',
+            'SoPhongTam' => 'required|integer|min:0',
+            'SoTang' => 'nullable|integer|min:0',
+            'DienTich' => 'required|numeric|min:0',
+            'Gia' => 'required|numeric|min:0',
+            'MoTaChiTiet' => 'required|min:50|max:5000',
+            'MaDanhMuc' => 'required|exists:categories,MaDanhMuc',
+            'images' => 'required|array|min:1',
+            'images.*' => 'string',
+            'utilities' => 'nullable|array',
+            'utilities.*' => 'exists:utilities,MaTienIch',
+        ]);
+
+        $house->update($validated);
+
+        if (!empty($validated['utilities'])) {
+            $house->utilities()->sync(array_map('intval', $validated['utilities']));
+        } else {
+            $house->utilities()->detach();
+        }
+
+        Images::where('MaNha', $house->MaNha)->delete();
+        foreach ($validated['images'] as $index => $url) {
+            Images::create([
+                'MaNha' => $house->MaNha,
+                'DuongDanHinh' => $url,
+                'LaAnhDaiDien' => $index === 0,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật bài đăng thành công',
+            'data' => $house->load('images', 'utilities')
+        ]);
     }
 
     /**

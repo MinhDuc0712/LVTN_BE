@@ -32,6 +32,8 @@ Route::prefix('user')->group(function () {
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/houses', [HouseController::class, 'store']);
+        Route::put('/houses/{id}', [HouseController::class, 'update']);
+
         // Route::apiResource('user', UserController::class);
         Route::get('/me', function (Request $request) {
             return response()->json([
