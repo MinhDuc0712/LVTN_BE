@@ -97,7 +97,7 @@ class UserController extends Controller
                 'HinhDaiDien' => $user->HinhDaiDien,
                 'TrangThai' => $user->TrangThai,
                 'LyDoCam' => $user->LyDoCam,
-                'Role' => $user->role, // Sử dụng accessor getRoleAttribute
+                'Role' => $user->role,
             ],
         ]);
     }

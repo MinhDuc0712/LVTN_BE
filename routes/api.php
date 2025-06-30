@@ -30,6 +30,7 @@ Route::prefix('user')->group(function () {
     Route::resource('categories', CategoriesController::class)->only(['index']);
     Route::get('/categories/{id}', [CategoriesController::class, 'show']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
+    Route::get('deposits/check/{ma_giao_dich}', [DepositHistoryController::class, 'checkTransaction']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/houses', [HouseController::class, 'store']);
         Route::put('/houses/{id}', [HouseController::class, 'update']);
@@ -44,7 +45,10 @@ Route::prefix('user')->group(function () {
                 'so_du' => $request->user()->so_du,
                 'HinhDaiDien' => $request->user()->HinhDaiDien,
             ]);
+
         });
+        Route::apiResource('deposits', DepositHistoryController::class);
+
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
         Route::get('/payments', [PaymentsController::class, 'getUserPayments']);
         Route::get('/houses/user-posts', [HouseController::class, 'getUserHouses']);
@@ -54,8 +58,9 @@ Route::prefix('user')->group(function () {
         // Route::put('/houses/{id}', [HouseController::class, 'update']);
         Route::apiResource('/ratings', RatingController::class);
         Route::apiResource('/favorites', FavouriteHouseController::class);
+        Route::apiResource('/payments', PaymentsController::class);
     });
-    
+
     // Route::get('/ratings', [RatingController::class, 'index'])
     // Route::get('/houses', [HouseController::class, 'index']);
     // Route::get('/houses/{id}', [HouseController::class, 'show']);
