@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DepositHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DepositHistoryController extends Controller
 {
@@ -51,7 +52,7 @@ class DepositHistoryController extends Controller
             'phuong_thuc' => $request->phuong_thuc,
             'trang_thai' => $request->trang_thai,
             'ghi_chu' => $request->ghi_chu ?? '',
-            'ma_giao_dich' => 'TXN' . now()->timestamp,
+            'ma_giao_dich' => 'TXN-' . Str::uuid(),
             'ngay_nap' => now()->toDateTimeString(),
         ]);
         if ($request->trang_thai === 'Hoàn tất') {
@@ -71,7 +72,8 @@ class DepositHistoryController extends Controller
             'ghi_chu' => 'nullable|string',
         ]);
 
-        $transaction = DepositHistory::findOrFail($id);
+        $transaction = str_starts_with($id, 'TXN-') ? DepositHistory::where('ma_giao_dich', $id)->firstOrFail() : DepositHistory::findOrFail($id);
+
         $thucNhan = $validated['so_tien'] + $validated['so_tien'] * ($validated['khuyen_mai'] / 100 ?? 0);
 
         if ($transaction->trang_thai !== 'Hoàn tất' && $validated['trang_thai'] === 'Hoàn tất') {
@@ -79,6 +81,7 @@ class DepositHistoryController extends Controller
             $user->so_du += $thucNhan;
             $user->save();
         }
+
         $transaction->update([
             'so_tien' => $validated['so_tien'],
             'khuyen_mai' => $validated['khuyen_mai'] ?? 0,
@@ -104,5 +107,15 @@ class DepositHistoryController extends Controller
         $transaction->delete();
 
         return response()->json(['message' => 'Đã xoá thành công'], 200);
+    }
+    public function checkTransaction($ma_giao_dich)
+    {
+        $transaction = DepositHistory::with('user')->where('ma_giao_dich', $ma_giao_dich)->first();
+
+        if (!$transaction) {
+            return response()->json(['message' => 'Không tìm thấy giao dịch'], 404);
+        }
+
+        return response()->json($transaction);
     }
 }

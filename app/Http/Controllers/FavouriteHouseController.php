@@ -16,12 +16,9 @@ class FavouriteHouseController extends Controller
     {
         $user = Auth::user();
 
-        if(!$user){
-            return response()-> json(['message' => 'You are not logged in'], 401);
-        }
-
         $favoriteHouses = Favourite_House::where('MaNguoiDung', $user->MaNguoiDung)
             ->with('house', 'user', 'house.images')
+            ->orderBy('MaYeuThich', 'asc')
             ->get()
             ->map(function ($favorite) {
                 return [
@@ -36,7 +33,7 @@ class FavouriteHouseController extends Controller
                     'description' => $favorite->house->MoTa,
                     'posted_at' => $favorite->house->NgayDang,
                     'saved_at' => $favorite->created_at->format('d-m-Y H:i:s'),
-                    'contact' => $favorite->house->user->MaNguoiDung,
+                    'contact' => $favorite->house->user->SDT,
                     'poster_name' => $favorite->house->user->HoTen ?? '',
                     'type' => $favorite->house->category->name ?? '',
                     'image' => $favorite->house->images->firstWhere('LaAnhDaiDien', true)?->DuongDanHinh ?? '',
@@ -119,7 +116,6 @@ class FavouriteHouseController extends Controller
         }
 
         return response()->json(['message' => 'Hành động không hợp lệ'], 400);
-
     }
 
     /**
@@ -127,26 +123,25 @@ class FavouriteHouseController extends Controller
      */
     public function destroy($favoriteId)
     {
+        $userId = Auth::user();
+        $favorite = Favourite_House::where('MaYeuThich', $favoriteId)->where('MaNguoiDung', $userId->MaNguoiDung)->first();
 
-            $userId = Auth::user();
-            $favorite = Favourite_House::where('MaYeuThich', $favoriteId)->where('MaNguoiDung', $userId->MaNguoiDung)->first();
-
-            if (!$favorite) {
-                return response()->json(
-                    [
-                        'error' => 'Không tìm thấy bài đăng yêu thích',
-                    ],
-                    404,
-                );
-            }
-
-            $favorite->delete();
-
+        if (!$favorite) {
             return response()->json(
                 [
-                    'message' => 'Đã xóa khỏi danh sách yêu thích',
+                    'error' => 'Không tìm thấy bài đăng yêu thích',
                 ],
-                204,
+                404,
             );
+        }
+
+        $favorite->delete();
+
+        return response()->json(
+            [
+                'message' => 'Đã xóa khỏi danh sách yêu thích',
+            ],
+            204,
+        );
     }
 }

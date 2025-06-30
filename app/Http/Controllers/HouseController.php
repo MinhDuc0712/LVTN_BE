@@ -95,6 +95,9 @@ class HouseController extends Controller
         if ($request->filled('ward')) {
             $query->where('DiaChi', 'like', '%' . $request->ward . '%');
         }
+        if ($request->filled('category_id')) {
+            $query->where('MaDanhMuc', $request->category_id);
+        }
 
         $results = $query->get();
 
@@ -118,24 +121,21 @@ class HouseController extends Controller
     public function getUserHouses(Request $request)
     {
         $user = $request->user();
-        $houses = $user->houses()
+        $houses = $user
+            ->houses()
             ->with(['images', 'utilities', 'category'])
             ->orderBy('NgayDang', 'desc')
             ->get();
 
         foreach ($houses as $house) {
-            if (
-                $house->TrangThai === House::STATUS_APPROVED &&
-                $house->NgayHetHan &&
-                now()->gt($house->NgayHetHan)
-            ) {
+            if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && now()->gt($house->NgayHetHan)) {
                 $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
                 $house->save();
             }
         }
 
-
-        $updatedHouses = $user->houses()
+        $updatedHouses = $user
+            ->houses()
             ->with(['images', 'utilities', 'category'])
             ->orderBy('NgayDang', 'desc')
             ->get();
@@ -145,8 +145,6 @@ class HouseController extends Controller
             'data' => $updatedHouses,
         ]);
     }
-
-
 
     /**
      * Show the form for creating a new resource.
@@ -369,7 +367,7 @@ class HouseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Bài đăng đã bị từ chối',
-            'data' => $house
+            'data' => $house,
         ]);
     }
     public function hide($id)
@@ -377,10 +375,13 @@ class HouseController extends Controller
         $house = House::findOrFail($id);
 
         if ($house->TrangThai !== self::STATUS_APPROVED) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Chỉ có thể ẩn bài đăng đang ở trạng thái Đã duyệt',
-            ], 400);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Chỉ có thể ẩn bài đăng đang ở trạng thái Đã duyệt',
+                ],
+                400,
+            );
         }
 
         $house->TrangThai = self::STATUS_HIDDEN;
@@ -389,7 +390,7 @@ class HouseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Bài đăng đã được ẩn',
-            'data' => $house
+            'data' => $house,
         ]);
     }
     public function relist($id)
@@ -414,10 +415,13 @@ class HouseController extends Controller
 
         if ($house->TrangThai === self::STATUS_EXPIRED) {
             // Nếu hết hạn thì cho phép thanh toán lại
-            return response()->json([
-                'message' => 'Tin đã hết hạn, bạn cần thanh toán lại để đăng lại',
-                'require_payment' => true,
-            ], 200);
+            return response()->json(
+                [
+                    'message' => 'Tin đã hết hạn, bạn cần thanh toán lại để đăng lại',
+                    'require_payment' => true,
+                ],
+                200,
+            );
         }
 
         return response()->json(['message' => 'Chỉ có thể đăng lại tin đã ẩn hoặc hết hạn'], 400);
@@ -438,10 +442,13 @@ class HouseController extends Controller
         $house = House::where('MaNha', $id)->where('MaNguoiDung', $user->MaNguoiDung)->first();
 
         if (!$house) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy bài đăng hoặc bạn không có quyền chỉnh sửa'
-            ], 404);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Không tìm thấy bài đăng hoặc bạn không có quyền chỉnh sửa',
+                ],
+                404,
+            );
         }
 
         $validated = $request->validate([
@@ -484,7 +491,7 @@ class HouseController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Cập nhật bài đăng thành công',
-            'data' => $house->load('images', 'utilities')
+            'data' => $house->load('images', 'utilities'),
         ]);
     }
 
