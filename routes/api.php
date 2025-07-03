@@ -12,6 +12,7 @@ use App\Http\Controllers\ImagesController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\FavouriteHouseController;
+use App\Http\Controllers\ZaloPayController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -27,7 +28,11 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('user')->group(function () {
-    Route::resource('categories', CategoriesController::class)->only(['index']);
+    Route::resource('categories', CategoriesController::class)
+        ->only(['index'])
+        ->names([
+            'index' => 'user.categories.index',
+        ]);
     Route::get('/categories/{id}', [CategoriesController::class, 'show']);
     Route::resource('utilities', UtilitiesController::class)->only(['index', 'show']);
     Route::get('deposits/check/{ma_giao_dich}', [DepositHistoryController::class, 'checkTransaction']);
@@ -45,9 +50,14 @@ Route::prefix('user')->group(function () {
                 'so_du' => $request->user()->so_du,
                 'HinhDaiDien' => $request->user()->HinhDaiDien,
             ]);
-
         });
-        Route::apiResource('deposits', DepositHistoryController::class);
+        Route::apiResource('deposits', DepositHistoryController::class)->names([
+            'index' => 'user.deposits.index',
+            'store' => 'user.deposits.store',
+            'show' => 'user.deposits.show',
+            'update' => 'user.deposits.update',
+            'destroy' => 'user.deposits.destroy',
+        ]);
 
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
         Route::get('/payments', [PaymentsController::class, 'getUserPayments']);
@@ -59,8 +69,11 @@ Route::prefix('user')->group(function () {
         Route::apiResource('/ratings', RatingController::class);
         Route::apiResource('/favorites', FavouriteHouseController::class);
         Route::apiResource('/payments', PaymentsController::class);
+        Route::post('/wallet-payments', [PaymentsController::class, 'storeWalletPayment']);
     });
 
+    Route::post('/zalopay/create-payment', [ZaloPayController::class, 'createPayment']);
+    Route::post('/zalopay/callback', [ZaloPayController::class, 'handleCallback'])->name('zalopay.callback');
     // Route::get('/ratings', [RatingController::class, 'index'])
     // Route::get('/houses', [HouseController::class, 'index']);
     // Route::get('/houses/{id}', [HouseController::class, 'show']);
@@ -70,12 +83,33 @@ Route::prefix('user')->group(function () {
 });
 
 Route::prefix('admin')->group(function () {
-    Route::apiResource('deposits', DepositHistoryController::class)->except(['show']);
+    Route::apiResource('deposits', DepositHistoryController::class)
+        ->except(['show'])
+        ->names([
+            'index' => 'admin.deposits.index',
+            'store' => 'admin.deposits.store',
+            'update' => 'admin.deposits.update',
+            'destroy' => 'admin.deposits.destroy',
+        ]);
     Route::apiResource('user', UserController::class);
-    Route::resource('categories', CategoriesController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('categories', CategoriesController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->names([
+            'index' => 'admin.categories.index',
+            'store' => 'admin.categories.store',
+            'update' => 'admin.categories.update',
+            'destroy' => 'admin.categories.destroy',
+        ]);
     Route::post('/user/{id}/ban', [UserController::class, 'ban']);
     Route::post('/user/{id}/unban', [UserController::class, 'unban']);
-    Route::resource('utilities', UtilitiesController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('utilities', UtilitiesController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->names([
+            'index' => 'admin.utilities.index',
+            'store' => 'admin.utilities.store',
+            'update' => 'admin.utilities.update',
+            'destroy' => 'admin.utilities.destroy',
+        ]);
     Route::get('users/{identifier}', [UserController::class, 'findUser']);
     Route::apiResource('roles', RoleController::class)->except(['show', 'edit']);
     Route::get('/houses', [HouseController::class, 'getAllForAdmin']);
