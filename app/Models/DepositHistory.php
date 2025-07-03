@@ -25,4 +25,6 @@ class DepositHistory extends Model
         return $this->belongsTo(User::class, 'ma_nguoi_dung', 'MaNguoiDung');
     }
 
+    
+
 }
