@@ -15,6 +15,8 @@ class ZaloPayController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:1000',
             'ma_nguoi_dung' => 'required',
+            'khuyen_mai' => 'nullable|numeric|min:0',
+
         ]);
 
         $user = User::where('MaNguoiDung', $request->ma_nguoi_dung)->orWhere('SDT', $request->ma_nguoi_dung)->firstOrFail();
@@ -45,7 +47,8 @@ class ZaloPayController extends Controller
         $data_string = implode('|', [$data['app_id'], $data['app_trans_id'], $data['app_user'], $data['amount'], $data['app_time'], $data['embed_data'], $data['item']]);
         $data['mac'] = hash_hmac('sha256', $data_string, $key1);
 
-        Log::info('ZaloPay Order Request:', $data);
+        // Log::info('ZaloPay Order Request:', $data);
+
 
         $response = Http::asForm()->post($endpoint, $data);
 
@@ -55,8 +58,8 @@ class ZaloPayController extends Controller
                 $deposit = DepositHistory::create([
                     'ma_nguoi_dung' => $user->MaNguoiDung,
                     'so_tien' => $request->amount,
-                    'khuyen_mai' => 0,
-                    'thuc_nhan' => $request->amount,
+                    'khuyen_mai' => $request->khuyen_mai ?? 0,
+                    'thuc_nhan' => $request->amount + ($request->amount * ($request->khuyen_mai / 100 ?? 0)),
                     'phuong_thuc' => 'ZaloPay',
                     'trang_thai' => 'Hoàn tất',
                     'ghi_chu' => 'Nạp tiền ZaloPay',

@@ -13,6 +13,8 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\FavouriteHouseController;
 use App\Http\Controllers\ZaloPayController;
+use App\Http\Controllers\DashboardController;
+
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -60,7 +62,6 @@ Route::prefix('user')->group(function () {
         ]);
 
         Route::post('/houses/payment', [HouseController::class, 'handlePayment']);
-        Route::get('/payments', [PaymentsController::class, 'getUserPayments']);
         Route::get('/houses/user-posts', [HouseController::class, 'getUserHouses']);
         Route::put('/houses/{id}/hide', [HouseController::class, 'hide']);
         Route::put('/houses/{id}/relist', [HouseController::class, 'relist']);
@@ -115,4 +116,6 @@ Route::prefix('admin')->group(function () {
     Route::get('/houses', [HouseController::class, 'getAllForAdmin']);
     Route::put('/houses/{id}/approve', [HouseController::class, 'approve']);
     Route::post('/houses/{id}/reject', [HouseController::class, 'reject']);
+    Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
 });

@@ -9,7 +9,6 @@ use App\Models\House;
 use App\Models\DepositHistory;
 use Illuminate\Support\Str;
 
-
 class PaymentsController extends Controller
 {
     const STATUS_PENDING_PAYMENT = 'Đang chờ thanh toán';
@@ -22,9 +21,10 @@ class PaymentsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function getUserPayments()
+    public function index()
     {
-        $user = Auth::user();
+        //
+                $user = Auth::user();
         if (!$user) {
             return response()->json(['message' => 'Không xác thực được người dùng'], 401);
         }
@@ -32,10 +32,6 @@ class PaymentsController extends Controller
         $payments = Payments::where('MaNguoiDung', $user->MaNguoiDung)->with('house')->orderBy('created_at', 'desc')->get();
 
         return response()->json($payments);
-    }
-    public function index()
-    {
-        //
     }
 
     /**
@@ -74,7 +70,8 @@ class PaymentsController extends Controller
         $validDays = max($days, $minDays);
         $cost = $validDays * $planPrice;
         $expiryDate = now()->addDays($validDays);
-$maGiaoDichRequest = $validated['ma_giao_dich'] ?? null;
+        $maGiaoDichRequest = $validated['ma_giao_dich'] ?? null;
+
         // Phân biệt loại thanh toán
         if ($maGiaoDichRequest) {
             // Xử lý thanh toán bằng chuyển khoản
@@ -84,7 +81,8 @@ $maGiaoDichRequest = $validated['ma_giao_dich'] ?? null;
                 return response()->json(['message' => 'Giao dịch đã được xử lý.'], 200);
             }
 
-            $maGiaoDich =$maGiaoDichRequest;
+            $maGiaoDich = $maGiaoDichRequest;
+
         } else {
             // Xử lý thanh toán bằng ví
             if ($user->so_du < $cost) {
@@ -96,6 +94,7 @@ $maGiaoDichRequest = $validated['ma_giao_dich'] ?? null;
 
             $maGiaoDich = 'WALLET-' . Str::uuid();
         }
+
 
         // Cập nhật bài đăng
         $house->TrangThai = $validated['type'] === 'vip' ? House::STATUS_APPROVED : House::STATUS_PROCESSING;

@@ -22,9 +22,7 @@ return new class extends Migration {
 
         Schema::create('like_comment', function (Blueprint $table) {
             $table->id();
-
             $table->timestamps();
-
             $table->foreignId('MaDanhGia')->constrained('ratings')->onDelete('cascade');
             $table->foreignId('MaNguoiDung')->constrained('users')->onDelete('cascade');
             $table->unique(['MaDanhGia', 'MaNguoiDung']); // Mỗi người chỉ like 1 lần
