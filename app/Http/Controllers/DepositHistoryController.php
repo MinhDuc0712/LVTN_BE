@@ -23,9 +23,9 @@ class DepositHistoryController extends Controller
         if ($status = $request->input('status')) {
             $query->where('trang_thai', $status);
         }
-$perPage = $request->input('per_page', 1000);
+
+        $perPage = $request->input('per_page', 1000);
         return $query->orderBy('id', 'desc')->paginate($perPage);
-        // return $query->orderBy('id', 'desc')->paginate(5);
     }
 
     public function store(Request $request)

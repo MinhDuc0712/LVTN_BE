@@ -16,6 +16,7 @@ class ZaloPayController extends Controller
             'amount' => 'required|numeric|min:1000',
             'ma_nguoi_dung' => 'required',
             'khuyen_mai' => 'nullable|numeric|min:0',
+
         ]);
 
         $user = User::where('MaNguoiDung', $request->ma_nguoi_dung)->orWhere('SDT', $request->ma_nguoi_dung)->firstOrFail();
@@ -47,6 +48,7 @@ class ZaloPayController extends Controller
         $data['mac'] = hash_hmac('sha256', $data_string, $key1);
 
         // Log::info('ZaloPay Order Request:', $data);
+
 
         $response = Http::asForm()->post($endpoint, $data);
 
