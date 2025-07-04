@@ -15,4 +15,8 @@ class Categories extends Model
         'mo_ta',
     ];
     public $timestamps = false;
+     public function houses()
+    {
+        return $this->hasMany(House::class, 'MaDanhMuc', 'MaDanhMuc');
+    }
 }

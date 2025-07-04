@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Payments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\DepositHistory;
 use App\Models\House;
+use App\Models\DepositHistory;
 class PaymentsController extends Controller
 {
     const STATUS_PENDING_PAYMENT = 'Đang chờ thanh toán';
@@ -19,9 +19,10 @@ class PaymentsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function getUserPayments()
+    public function index()
     {
-        $user = Auth::user();
+        //
+                $user = Auth::user();
         if (!$user) {
             return response()->json(['message' => 'Không xác thực được người dùng'], 401);
         }
@@ -29,10 +30,6 @@ class PaymentsController extends Controller
         $payments = Payments::where('MaNguoiDung', $user->MaNguoiDung)->with('house')->orderBy('created_at', 'desc')->get();
 
         return response()->json($payments);
-    }
-    public function index()
-    {
-        //
     }
 
     /**
@@ -69,6 +66,35 @@ class PaymentsController extends Controller
 
         $unitMap = ['day' => 1, 'week' => 7, 'month' => 30];
         $days = $validated['quantity'] * $unitMap[$validated['unit']];
+        $planPrice = $validated['type'] === 'vip' ? 30000 : 5000;
+        $minDays = $validated['type'] === 'vip' ? 1 : 3;
+        $validDays = max($days, $minDays);
+        $cost = $validDays * $planPrice;
+        $expiryDate = now()->addDays($validDays);
+        $maGiaoDichRequest = $validated['ma_giao_dich'] ?? null;
+        // Phân biệt loại thanh toán
+        if ($maGiaoDichRequest) {
+            // Xử lý thanh toán bằng chuyển khoản
+            $deposit = DepositHistory::where('ma_giao_dich', $maGiaoDichRequest)->where('trang_thai', 'Hoàn tất')->firstOrFail();
+
+            if (Payments::where('MaGiaoDich', $maGiaoDichRequest)->exists()) {
+                return response()->json(['message' => 'Giao dịch đã được xử lý.'], 200);
+            }
+
+            $maGiaoDich = $maGiaoDichRequest;
+        } else {
+            // Xử lý thanh toán bằng ví
+            if ($user->so_du < $cost) {
+                return response()->json(['message' => 'Số dư không đủ để thanh toán.'], 422);
+            }
+
+            $user->so_du -= $cost;
+            $user->save();
+
+            $maGiaoDich = 'WALLET-' . Str::uuid();
+        }
+
+        // Cập nhật bài đăng
         $expiryDate = now()->addDays($days);
 
         $house->TrangThai = $validated['type'] === 'vip' ? House::STATUS_APPROVED : House::STATUS_PROCESSING;
