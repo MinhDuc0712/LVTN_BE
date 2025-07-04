@@ -23,6 +23,10 @@ Route::prefix('auth')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile'])->middleware('auth:sanctum');
     Route::post('/updateProfile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
     Route::post('/changePassword', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
+
+     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 Route::get('/user', function (Request $request) {
