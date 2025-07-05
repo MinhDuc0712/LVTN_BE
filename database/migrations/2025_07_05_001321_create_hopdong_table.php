@@ -17,6 +17,9 @@ return new class extends Migration {
             $table->date('ngay_bat_dau');
             $table->date('ngay_ket_thuc')->nullable();
             $table->decimal('tien_coc', 10, 2);
+            $table->decimal('tien_thue', 10, 2);
+            $table->text('chi_phi_tien_ich');
+            $table->text('ghi_chu');
         });
     }
 

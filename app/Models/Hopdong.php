@@ -9,7 +9,7 @@ class Hopdong extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['phong_id', 'khach_id', 'ngay_bat_dau', 'ngay_ket_thuc', 'tien_coc'];
+    protected $fillable = ['phong_id', 'khach_id', 'ngay_bat_dau', 'ngay_ket_thuc', 'tien_coc','tien_thue','chi_phi_tien_ich','ghi_chu'];
 
     public function phong()
     {
@@ -28,8 +28,9 @@ class Hopdong extends Model
 
     public function phienuocs()
     {
-        return $this->hasMany(Phienuoc::class);
+        return $this->hasMany(Phieunuoc::class);
     }
+
 
     public function phieuthutiens()
     {
@@ -38,6 +39,6 @@ class Hopdong extends Model
 
     public function phieutraientro()
     {
-        return $this->hasOne(Phieutraientro::class);
+        return $this->hasOne(Phieutratientro::class);
     }
 }
