@@ -79,6 +79,8 @@ Route::prefix('user')->group(function () {
 
     Route::post('/zalopay/create-payment', [ZaloPayController::class, 'createPayment']);
     Route::post('/zalopay/callback', [ZaloPayController::class, 'handleCallback'])->name('zalopay.callback');
+    Route::get('/zalopay/check-transaction/{ma_giao_dich}', [ZaloPayController::class, 'checkZaloTransaction']);
+
     // Route::get('/ratings', [RatingController::class, 'index'])
     // Route::get('/houses', [HouseController::class, 'index']);
     // Route::get('/houses/{id}', [HouseController::class, 'show']);
