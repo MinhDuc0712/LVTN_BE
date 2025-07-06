@@ -8,11 +8,9 @@ use Illuminate\Support\Facades\Storage;
 
 class PhongController extends Controller
 {
-
     public function index()
     {
-
-        return Phong::with('images')->latest()->get();
+        return Phong::with('images')->get();
     }
 
     public function store(Request $request)
@@ -32,7 +30,7 @@ class PhongController extends Controller
     }
     public function uploadImages(Request $request, Phong $phong)
     {
-        \Log::info('FILES DEBUG', $request->allFiles());
+        // \Log::info('FILES DEBUG', $request->allFiles());
 
         $request->validate([
             'hinh_anh' => 'required',
@@ -47,12 +45,14 @@ class PhongController extends Controller
         return response()->json(['message' => 'Upload OK', 'images' => $phong->images], 201);
     }
 
-
-    public function show(Phong $phong)
+    public function show($id)
     {
-        return $phong->load('images');
+        $phong = Phong::with('images')->find($id);
+        if (!$phong) {
+            return response()->json(['message' => 'Phòng không tồn tại'], 404);
+        }
+        return response()->json($phong);
     }
-
 
     public function update(Request $request, Phong $phong)
     {

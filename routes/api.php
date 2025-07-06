@@ -15,6 +15,8 @@ use App\Http\Controllers\FavouriteHouseController;
 use App\Http\Controllers\ZaloPayController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PhongController;
+use App\Http\Controllers\KhachController;
+use App\Http\Controllers\HopdongController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -24,7 +26,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/updateProfile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
     Route::post('/changePassword', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
-     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
@@ -87,6 +89,9 @@ Route::prefix('user')->group(function () {
     Route::get('/houses/featured', [HouseController::class, 'featured']);
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
     Route::apiResource('/houses', HouseController::class)->only(['index', 'show']);
+    Route::apiResource('rooms', PhongController::class);
+    Route::apiResource('khach', KhachController::class);
+    Route::apiResource('hopdong', HopdongController::class);
 });
 
 Route::prefix('admin')->group(function () {
@@ -124,9 +129,6 @@ Route::prefix('admin')->group(function () {
     Route::post('/houses/{id}/reject', [HouseController::class, 'reject']);
     Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
-    Route::apiResource('rooms', PhongController::class)->names([
-        'store' => 'admin.rooms.store',
-    ]);
-    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])
-        ->name('admin.rooms.uploadImages');
+    Route::apiResource('rooms', PhongController::class);
+    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])->name('admin.rooms.uploadImages');
 });

@@ -29,6 +29,21 @@ class KhachController extends Controller
     public function store(Request $request)
     {
         //
+        $validatedData = $request->validate([
+            'ho_ten' => 'required|string|max:255',
+            'cmnd' => 'required|string|max:20|unique:khach,cmnd',
+            'sdt' => 'required|string|max:15|unique:khach,sdt',
+            'email' => 'nullable|email|max:255|unique:khach,email',
+            'dia_chi' => 'nullable|string|max:255',
+        ]);
+        $khach = Khach::create($validatedData);
+        return response()->json(
+            [
+                'message' => 'Khách hàng đã được tạo thành công',
+                'khach' => $khach,
+            ],
+            201,
+        );
     }
 
     /**
