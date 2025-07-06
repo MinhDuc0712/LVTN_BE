@@ -13,6 +13,8 @@ class HopdongController extends Controller
     public function index()
     {
         //
+        $hopdongs = Hopdong::with(['phong', 'khach'])->get();
+        return response()->json($hopdongs);
     }
 
     /**
@@ -29,6 +31,24 @@ class HopdongController extends Controller
     public function store(Request $request)
     {
         //
+        $validatedData = $request->validate([
+            'phong_id' => 'required|exists:phong,id',
+            'khach_id' => 'required|exists:khach,id',
+            'ngay_bat_dau' => 'required|date',
+            'ngay_ket_thuc' => 'required|date|after_or_equal:ngay_bat_dau',
+            'tien_coc' => 'required|numeric|min:0',
+            'tien_thue' => 'required|numeric|min:0',
+            'chi_phi_tien_ich' => 'nullable|numeric|min:0',
+            'ghi_chu' => 'nullable|string|max:255',
+        ]);
+        $hopdong = Hopdong::create($validatedData);
+        return response()->json(
+            [
+                'message' => 'Hợp đồng đã được tạo thành công',
+                'contract' => $hopdong,
+            ],
+            201,
+        );
     }
 
     /**
