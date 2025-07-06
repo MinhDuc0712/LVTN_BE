@@ -14,7 +14,7 @@ use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\FavouriteHouseController;
 use App\Http\Controllers\ZaloPayController;
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\PhongController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -124,4 +124,9 @@ Route::prefix('admin')->group(function () {
     Route::post('/houses/{id}/reject', [HouseController::class, 'reject']);
     Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
+    Route::apiResource('rooms', PhongController::class)->names([
+        'store' => 'admin.rooms.store',
+    ]);
+    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])
+        ->name('admin.rooms.uploadImages');
 });

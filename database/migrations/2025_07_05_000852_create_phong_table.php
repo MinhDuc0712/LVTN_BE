@@ -11,13 +11,13 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('phong', function (Blueprint $table) {
-            $table->id('ma_phong');
+            $table->id();
+            $table->string('ten_phong')->unique(); 
             $table->float('dien_tich');
             $table->text('mo_ta')->nullable();
             $table->integer('tang');
             $table->decimal('gia', 10, 2);
-            $table->string('hinh_anh')->nullable();
-            $table->string('trang_thai');
+            $table->enum('trang_thai', ['trong', 'da_thue', 'bao_tri'])->default('trong');
         });
     }
 
