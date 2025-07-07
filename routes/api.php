@@ -24,7 +24,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/updateProfile', [AuthController::class, 'updateProfile'])->middleware('auth:sanctum');
     Route::post('/changePassword', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
-     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
@@ -122,9 +122,12 @@ Route::prefix('admin')->group(function () {
     Route::post('/houses/{id}/reject', [HouseController::class, 'reject']);
     Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
-    Route::apiResource('rooms', PhongController::class)->names([
-        'store' => 'admin.rooms.store',
-    ]);
-    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])
-        ->name('admin.rooms.uploadImages');
+    Route::get('rooms', [PhongController::class, 'index']);
+    Route::post('rooms', [PhongController::class, 'store']);
+    Route::get('rooms/{phong}', [PhongController::class, 'show']);
+    Route::match(['put', 'patch'], 'rooms/{phong}', [PhongController::class, 'update']);
+    Route::post('rooms/{phong}', [PhongController::class, 'update']);
+    Route::delete('rooms/{phong}', [PhongController::class, 'destroy']);
+    Route::delete('room-images/{id}', [PhongController::class, 'destroyImage']);
+    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages']);
 });

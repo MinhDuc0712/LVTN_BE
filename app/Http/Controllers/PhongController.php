@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Phong;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
+use App\Models\PhongImage;
 class PhongController extends Controller
 {
 
     public function index()
     {
 
-        return Phong::with('images')->latest()->get();
+        $rooms = Phong::with('images')->get();
+
+        return response()->json([
+            'data' => $rooms
+        ]);
+
     }
 
     public function store(Request $request)
@@ -32,7 +37,6 @@ class PhongController extends Controller
     }
     public function uploadImages(Request $request, Phong $phong)
     {
-        \Log::info('FILES DEBUG', $request->allFiles());
 
         $request->validate([
             'hinh_anh' => 'required',
@@ -50,8 +54,9 @@ class PhongController extends Controller
 
     public function show(Phong $phong)
     {
-        return $phong->load('images');
+        return response()->json($phong->load('images'));
     }
+
 
 
     public function update(Request $request, Phong $phong)
@@ -67,7 +72,6 @@ class PhongController extends Controller
 
         $phong->update($data);
 
-        // Có thể cho phép thêm ảnh mới
         if ($request->hasFile('hinh_anh')) {
             foreach ($request->file('hinh_anh') as $file) {
                 $path = $file->store('phongs', 'public');
@@ -80,7 +84,16 @@ class PhongController extends Controller
             'data' => $phong->load('images'),
         ]);
     }
+    public function destroyImage($id)
+    {
+        $image = PhongImage::findOrFail($id);
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+        $image->delete();
 
+        return response()->json(['message' => 'Đã xoá ảnh'], 200);
+    }
     public function destroy(Phong $phong)
     {
         foreach ($phong->images as $img) {
