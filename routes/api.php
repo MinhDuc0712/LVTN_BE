@@ -131,4 +131,5 @@ Route::prefix('admin')->group(function () {
     Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
     Route::apiResource('rooms', PhongController::class);
     Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])->name('admin.rooms.uploadImages');
+    Route::delete('room-images/{id}', [PhongController::class, 'destroyImage']);
 });
