@@ -15,6 +15,8 @@ use App\Http\Controllers\FavouriteHouseController;
 use App\Http\Controllers\ZaloPayController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PhongController;
+use App\Http\Controllers\KhachController;
+use App\Http\Controllers\HopdongController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -79,12 +81,17 @@ Route::prefix('user')->group(function () {
 
     Route::post('/zalopay/create-payment', [ZaloPayController::class, 'createPayment']);
     Route::post('/zalopay/callback', [ZaloPayController::class, 'handleCallback'])->name('zalopay.callback');
+    Route::get('/zalopay/check-transaction/{ma_giao_dich}', [ZaloPayController::class, 'checkZaloTransaction']);
+
     // Route::get('/ratings', [RatingController::class, 'index'])
     // Route::get('/houses', [HouseController::class, 'index']);
     // Route::get('/houses/{id}', [HouseController::class, 'show']);
     Route::get('/houses/featured', [HouseController::class, 'featured']);
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
     Route::apiResource('/houses', HouseController::class)->only(['index', 'show']);
+    Route::apiResource('rooms', PhongController::class);
+    Route::apiResource('khach', KhachController::class);
+    Route::apiResource('hopdong', HopdongController::class);
 });
 
 Route::prefix('admin')->group(function () {
@@ -122,12 +129,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/houses/{id}/reject', [HouseController::class, 'reject']);
     Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
-    Route::get('rooms', [PhongController::class, 'index']);
-    Route::post('rooms', [PhongController::class, 'store']);
-    Route::get('rooms/{phong}', [PhongController::class, 'show']);
-    Route::match(['put', 'patch'], 'rooms/{phong}', [PhongController::class, 'update']);
-    Route::post('rooms/{phong}', [PhongController::class, 'update']);
-    Route::delete('rooms/{phong}', [PhongController::class, 'destroy']);
+    Route::apiResource('rooms', PhongController::class);
+    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])->name('admin.rooms.uploadImages');
     Route::delete('room-images/{id}', [PhongController::class, 'destroyImage']);
-    Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages']);
 });

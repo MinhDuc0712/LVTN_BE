@@ -39,6 +39,8 @@ class FavouriteHouseController extends Controller
                     'image' => $favorite->house->images->firstWhere('LaAnhDaiDien', true)?->DuongDanHinh ?? '',
                 ];
             });
+
+            
         return response()->json(['data' => $favoriteHouses], 200);
     }
 

@@ -301,7 +301,12 @@ class HouseController extends Controller
             ->orderBy('NoiBat', 'desc')
             ->orderBy('NgayDang', 'desc')
             ->get();
-
+        foreach ($houses as $house) {
+            if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && now()->gt($house->NgayHetHan)) {
+                $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
+                $house->save();
+            }
+        }
         return response()->json([
             'success' => true,
             'data' => $houses,

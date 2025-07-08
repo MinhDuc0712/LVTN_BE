@@ -8,16 +8,13 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\PhongImage;
 class PhongController extends Controller
 {
-
     public function index()
     {
-
         $rooms = Phong::with('images')->get();
 
         return response()->json([
             'data' => $rooms
         ]);
-
     }
 
     public function store(Request $request)
@@ -51,13 +48,14 @@ class PhongController extends Controller
         return response()->json(['message' => 'Upload OK', 'images' => $phong->images], 201);
     }
 
-
-    public function show(Phong $phong)
+    public function show($id)
     {
-        return response()->json($phong->load('images'));
+        $phong = Phong::with('images')->find($id);
+        if (!$phong) {
+            return response()->json(['message' => 'Phòng không tồn tại'], 404);
+        }
+        return response()->json($phong);
     }
-
-
 
     public function update(Request $request, Phong $phong)
     {
