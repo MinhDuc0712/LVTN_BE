@@ -21,7 +21,7 @@ class Phong extends Model
 
     public function hopdongs()
     {
-        return $this->hasMany(Hopdong::class);
+        return $this->hasOne(Hopdong::class);
     }
     public function images()
     {

@@ -353,6 +353,7 @@ class HouseController extends Controller
     public function approve($id)
     {
         $house = House::findOrFail($id);
+        $house->NgayDang = now();
         $house->TrangThai = self::STATUS_APPROVED;
         $house->save();
 
@@ -410,6 +411,7 @@ class HouseController extends Controller
         if ($house->TrangThai === self::STATUS_HIDDEN) {
             // Nếu đang ẩn và còn hạn thì cho duyệt lại
             if (now()->lessThanOrEqualTo($house->NgayHetHan)) {
+                $house->NgayDang = now();
                 $house->TrangThai = self::STATUS_APPROVED;
                 $house->save();
                 return response()->json(['message' => 'Đăng lại thành công (từ trạng thái ẩn)']);
@@ -419,6 +421,7 @@ class HouseController extends Controller
         }
 
         if ($house->TrangThai === self::STATUS_EXPIRED) {
+            $house->NgayDang = now();
             // Nếu hết hạn thì cho phép thanh toán lại
             return response()->json(
                 [
@@ -470,12 +473,15 @@ class HouseController extends Controller
             'Gia' => 'required|numeric|min:0',
             'MoTaChiTiet' => 'required|min:50|max:5000',
             'MaDanhMuc' => 'required|exists:categories,MaDanhMuc',
+            'NgayDang' => 'date',
             'images' => 'required|array|min:1',
             'images.*' => 'string',
             'utilities' => 'nullable|array',
             'utilities.*' => 'exists:utilities,MaTienIch',
         ]);
 
+        $house->TrangThai = House::STATUS_PROCESSING;
+        $house->NgayDang = now();
         $house->update($validated);
 
         if (!empty($validated['utilities'])) {

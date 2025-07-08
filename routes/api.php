@@ -132,4 +132,5 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('rooms', PhongController::class);
     Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])->name('admin.rooms.uploadImages');
     Route::delete('room-images/{id}', [PhongController::class, 'destroyImage']);
+    Route::apiResource('hopdong', HopdongController::class);
 });
