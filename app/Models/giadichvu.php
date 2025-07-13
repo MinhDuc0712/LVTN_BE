@@ -3,9 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class giadichvu extends Model
+class Giadichvu extends Model
 {
-     protected $fillable = ['ten', 'gia_tri', 'ngay_ap_dung'];
-
+    use HasFactory;
+public $timestamps = false;
+    protected $table = 'giadichvu'; 
+    
+    protected $fillable = [
+        'ten',
+        'gia_tri',
+        'ngay_ap_dung',
+    ];
 }

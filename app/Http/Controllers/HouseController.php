@@ -128,7 +128,8 @@ class HouseController extends Controller
             ->get();
 
         foreach ($houses as $house) {
-            if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && now()->gt($house->NgayHetHan)) {
+            if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && 
+                now()->gt($house->NgayHetHan)) {
                 $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
                 $house->save();
             }
@@ -303,7 +304,7 @@ class HouseController extends Controller
             ->get();
         foreach ($houses as $house) {
             if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && now()->gt($house->NgayHetHan)) {
-                $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
+                $house->TrangThai = self::STATUS_EXPIRED; 
                 $house->save();
             }
         }
@@ -411,7 +412,7 @@ class HouseController extends Controller
         if ($house->TrangThai === self::STATUS_HIDDEN) {
             // Nếu đang ẩn và còn hạn thì cho duyệt lại
             if (now()->lessThanOrEqualTo($house->NgayHetHan)) {
-                $house->NgayDang = now();
+                // $house->NgayDang = now();
                 $house->TrangThai = self::STATUS_APPROVED;
                 $house->save();
                 return response()->json(['message' => 'Đăng lại thành công (từ trạng thái ẩn)']);
@@ -445,7 +446,7 @@ class HouseController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+       
         $user = Auth::user();
         $house = House::where('MaNha', $id)->where('MaNguoiDung', $user->MaNguoiDung)->first();
 
