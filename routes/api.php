@@ -17,6 +17,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PhongController;
 use App\Http\Controllers\KhachController;
 use App\Http\Controllers\HopdongController;
+use App\Http\Controllers\GiadichvuController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -133,4 +134,5 @@ Route::prefix('admin')->group(function () {
     Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])->name('admin.rooms.uploadImages');
     Route::delete('room-images/{id}', [PhongController::class, 'destroyImage']);
     Route::apiResource('hopdong', HopdongController::class);
+    Route::apiResource('giadichvu', GiadichvuController::class);
 });
