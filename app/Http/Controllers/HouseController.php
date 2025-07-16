@@ -124,25 +124,19 @@ class HouseController extends Controller
         $houses = $user
             ->houses()
             ->with(['images', 'utilities', 'category'])
-            ->orderBy('NgayDang', 'desc')
+            ->orderBy('MaNha', 'asc')
             ->get();
 
         foreach ($houses as $house) {
             if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && now()->gt($house->NgayHetHan)) {
-                $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
+                $house->TrangThai = self::STATUS_EXPIRED;
                 $house->save();
             }
         }
 
-        $updatedHouses = $user
-            ->houses()
-            ->with(['images', 'utilities', 'category'])
-            ->orderBy('NgayDang', 'desc')
-            ->get();
-
         return response()->json([
             'success' => true,
-            'data' => $updatedHouses,
+            'data' => $houses,
         ]);
     }
 
@@ -409,9 +403,7 @@ class HouseController extends Controller
         }
 
         if ($house->TrangThai === self::STATUS_HIDDEN) {
-            // Nếu đang ẩn và còn hạn thì cho duyệt lại
             if (now()->lessThanOrEqualTo($house->NgayHetHan)) {
-                $house->NgayDang = now();
                 $house->TrangThai = self::STATUS_APPROVED;
                 $house->save();
                 return response()->json(['message' => 'Đăng lại thành công (từ trạng thái ẩn)']);
@@ -422,7 +414,7 @@ class HouseController extends Controller
 
         if ($house->TrangThai === self::STATUS_EXPIRED) {
             $house->NgayDang = now();
-            // Nếu hết hạn thì cho phép thanh toán lại
+            $house->save();
             return response()->json(
                 [
                     'message' => 'Tin đã hết hạn, bạn cần thanh toán lại để đăng lại',

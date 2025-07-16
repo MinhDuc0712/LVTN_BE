@@ -123,7 +123,7 @@ Route::prefix('admin')->group(function () {
             'destroy' => 'admin.utilities.destroy',
         ]);
     Route::get('users/{identifier}', [UserController::class, 'findUser']);
-    Route::apiResource('roles', RoleController::class)->except(['show', 'edit']);
+    Route::apiResource('roles', RoleController::class);
     Route::get('/houses', [HouseController::class, 'getAllForAdmin']);
     Route::put('/houses/{id}/approve', [HouseController::class, 'approve']);
     Route::post('/houses/{id}/reject', [HouseController::class, 'reject']);

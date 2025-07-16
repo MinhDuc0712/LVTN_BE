@@ -53,7 +53,7 @@ class AuthController extends Controller
         $user = User::where('SDT', $request->SDT)->first();
 
         if (!$user || !\Hash::check($request->Password, $user->Password)) {
-            return response()->json(['message' => 'Thông tin xác thực không hợp lệ'], 401);
+            return response()->json(['message' => 'Mật khẩu không đúng'], 401);
         }
 
         if ($user->TrangThai === 'Bị cấm') {
