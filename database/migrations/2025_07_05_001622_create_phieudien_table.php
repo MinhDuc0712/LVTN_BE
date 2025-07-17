@@ -16,7 +16,9 @@ return new class extends Migration {
             $table->integer('chi_so_dau');
             $table->integer('chi_so_cuoi');
             $table->decimal('don_gia', 10, 2);
-            $table->date('thang');
+            $table->date('ngay_tao')->nullable();
+            $table->string('thang', 7)->nullable();
+            $table->string('trang_thai')->nullable();
         });
     }
 

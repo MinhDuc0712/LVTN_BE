@@ -18,6 +18,8 @@ use App\Http\Controllers\PhongController;
 use App\Http\Controllers\KhachController;
 use App\Http\Controllers\HopdongController;
 use App\Http\Controllers\GiadichvuController;
+use App\Http\Controllers\PhieudienController;
+use App\Http\Controllers\PhieunuocController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -131,8 +133,17 @@ Route::prefix('admin')->group(function () {
     Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard-charts', [DashboardController::class, 'charts']);
     Route::apiResource('rooms', PhongController::class);
+    Route::delete('/rooms/{id}', [PhongController::class, 'destroy']);
     Route::post('rooms/{phong}/images', [PhongController::class, 'uploadImages'])->name('admin.rooms.uploadImages');
     Route::delete('room-images/{id}', [PhongController::class, 'destroyImage']);
     Route::apiResource('hopdong', HopdongController::class);
     Route::apiResource('giadichvu', GiadichvuController::class);
+    Route::apiResource('electric-bills', PhieudienController::class);
+    Route::get('/electric/last-reading/{hopdong_id}', [PhieuDienController::class, 'getLastReading']);
+    Route::put('/electric-bills/{id}/toggle-status', [PhieudienController::class, 'toggleStatus']);
+    Route::apiResource('water-bills', PhieunuocController::class);
+    Route::get('/water/last-reading/{hopdong_id}', [PhieunuocController::class, 'getLastReading']);
+    Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
+
+
 });

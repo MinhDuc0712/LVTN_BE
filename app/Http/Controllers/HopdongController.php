@@ -14,7 +14,11 @@ class HopdongController extends Controller
     {
         //
         $hopdongs = Hopdong::with(['phong', 'khach'])->get();
-        return response()->json($hopdongs);
+        return response()->json([
+            'success' => true,
+            'data' => $hopdongs
+        ]);
+
     }
 
     /**
