@@ -34,54 +34,54 @@ class DashboardController extends Controller
             'totalTransactions' => $totalTransactions,
         ]);
     }
-    public function charts()
-    {
-        $depositQuery = DB::table('deposit_history')->selectRaw('MONTH(ngay_nap) as month, SUM(so_tien) as revenue, COUNT(*) as transactions')->where('trang_thai', 'Hoàn tất')->groupBy(DB::raw('MONTH(ngay_nap)'));
 
-        $paymentQuery = DB::table('payments')->selectRaw('MONTH(created_at) as month, SUM(TongTien) as revenue, COUNT(*) as transactions')->groupBy(DB::raw('MONTH(created_at)'));
+    public function charts(Request $request)
+    {
+        $filter = $request->query('filter', 'month');
+
+        $isWeek = $filter === 'week';
+        $groupFormat = match ($filter) {
+            'week' => 'YEARWEEK(%s, 3)',
+            'year' => "DATE_FORMAT(%s, '%%Y')",
+            default => "DATE_FORMAT(%s, '%%m-%%Y')",
+        };
+        $labelPrefix = match ($filter) {
+            'week' => 'Tuần ',
+            'year' => 'Năm ',
+            default => 'Tháng ',
+        };
+
+        $depositQuery = DB::table('deposit_history')
+            ->selectRaw(sprintf($groupFormat, 'ngay_nap') . ' as label, SUM(so_tien) as revenue')
+            ->where('trang_thai', 'Hoàn tất')
+            ->groupBy('label');
+
+        $paymentQuery = DB::table('payments')
+            ->selectRaw(sprintf($groupFormat, 'created_at') . ' as label, SUM(TongTien) as revenue')
+            ->groupBy('label');
 
         $combined = $depositQuery->unionAll($paymentQuery);
 
-        $monthlyRevenue = DB::table(DB::raw("({$combined->toSql()}) as combined"))
+        $results = DB::table(DB::raw("({$combined->toSql()}) as combined"))
             ->mergeBindings($combined)
-            ->selectRaw('month, SUM(revenue) as revenue, SUM(transactions) as transactions')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'month' => 'Tháng ' . $item->month,
-                    'revenue' => (int) $item->revenue,
-                    'Số giao dịch' => $item->transactions,
-                ];
-            });
+            ->selectRaw('label, SUM(revenue) as revenue')
+            ->groupBy('label')
+            ->orderBy('label')
+            ->get();
 
-        $categoryStats = Categories::withCount('houses')
-            ->get()
-            ->map(function ($item, $index) {
-                $colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
-                return [
-                    'name' => $item->name,
-                    'value' => $item->houses_count,
-                    'color' => $colors[$index % count($colors)],
-                ];
-            });
+        $mapped = $results->map(function ($item) use ($filter, $labelPrefix, $isWeek) {
+            if ($isWeek) {
+                $year = substr($item->label, 0, 4);
+                $week = substr($item->label, 4);
+                $start = \Carbon\Carbon::now()->setISODate($year, $week)->startOfWeek();
+                $end = $start->copy()->endOfWeek();
+                $label = "{$labelPrefix}{$week} ({$start->format('d/m')} - {$end->format('d/m')})";
+            } else {
+                $label = $labelPrefix . $item->label;
+            }
+            return ['label' => $label, 'revenue' => (int) $item->revenue];
+        });
 
-        $postTrend = House::where('TrangThai', House::STATUS_APPROVED)
-            ->selectRaw('MONTH(NgayDang) as month, COUNT(*) as posts')
-            ->groupBy(DB::raw('MONTH(NgayDang)'))
-            ->orderBy('month')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'month' => 'Tháng ' . $item->month,
-                    'Bài đăng' => $item->posts,
-                ];
-            });
-        return response()->json([
-            'monthlyRevenue' => $monthlyRevenue,
-            'CategoriesStats' => $categoryStats,
-            'postTrend' => $postTrend,
-        ]);
+        return response()->json(['revenueChart' => $mapped]);
     }
 }
