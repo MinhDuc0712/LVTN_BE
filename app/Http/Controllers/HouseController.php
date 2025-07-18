@@ -130,11 +130,10 @@ class HouseController extends Controller
         foreach ($houses as $house) {
             if ($house->TrangThai === House::STATUS_APPROVED && $house->NgayHetHan && 
                 now()->gt($house->NgayHetHan)) {
-                $house->TrangThai = self::STATUS_EXPIRED; // Dùng constant thay vì 'Tin hết hạn'
+                $house->TrangThai = self::STATUS_EXPIRED; 
                 $house->save();
             }
         }
-
         return response()->json([
             'success' => true,
             'data' => $houses,

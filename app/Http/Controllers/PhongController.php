@@ -98,17 +98,28 @@ class PhongController extends Controller
         return response()->json(['message' => 'Đã xoá ảnh'], 200);
     }
 
-    public function destroy(Phong $phong)
+    public function destroy($id)
     {
+        $phong = Phong::find($id);
+
+        if (!$phong) {
+            return response()->json(['message' => 'Phòng không tồn tại'], 404);
+        }
+
         foreach ($phong->images as $img) {
             if (!str_starts_with($img->image_path, 'http')) {
-                Storage::disk('public')->delete($img->image_path);
+                if (Storage::disk('public')->exists($img->image_path)) {
+                    Storage::disk('public')->delete($img->image_path);
+                }
             }
             $img->delete();
         }
 
         $phong->delete();
 
-        return response()->json(['message' => 'Đã xoá phòng'], 204);
+        return response()->json(['message' => 'Đã xoá phòng thành công'], 204);
     }
+
+
+
 }
