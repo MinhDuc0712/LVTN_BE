@@ -13,8 +13,12 @@ return new class extends Migration {
         Schema::create('phieuthutien', function (Blueprint $table) {
             $table->id();
             $table->foreignId('hopdong_id')->constrained()->onDelete('cascade');
+            $table->string('thang', 7)->nullable();
             $table->decimal('so_tien', 10, 2);
+            $table->decimal('da_thanh_toan', 10, 2);
+            $table->decimal('no', 10, 2);
             $table->date('ngay_thu');
+            $table->string('trang_thai');
             $table->string('noi_dung')->nullable();
         });
     }

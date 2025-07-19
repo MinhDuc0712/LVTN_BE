@@ -20,6 +20,7 @@ use App\Http\Controllers\HopdongController;
 use App\Http\Controllers\GiadichvuController;
 use App\Http\Controllers\PhieudienController;
 use App\Http\Controllers\PhieunuocController;
+use App\Http\Controllers\phieuthutienController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -144,4 +145,8 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('water-bills', PhieunuocController::class);
     Route::get('/water/last-reading/{hopdong_id}', [PhieunuocController::class, 'getLastReading']);
     Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
+    Route::apiResource('phieuthutien', phieuthutienController::class);
+    Route::delete('phieuthutien/{id}', [phieuthutienController::class, 'destroy']);
+    Route::put('phieuthutien/{id}', [phieuthutienController::class, 'update']);
+
 });

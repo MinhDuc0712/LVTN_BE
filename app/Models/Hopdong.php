@@ -22,18 +22,18 @@ class Hopdong extends Model
         return $this->belongsTo(Khach::class);
     }
 
-    public function phieudiens()
+    public function phieudien()
     {
         return $this->hasMany(Phieudien::class);
     }
 
-    public function phienuocs()
+    public function phienuoc()
     {
         return $this->hasMany(Phieunuoc::class);
     }
 
 
-    public function phieuthutiens()
+    public function phieuthutien()
     {
         return $this->hasMany(Phieuthutien::class);
     }

@@ -14,15 +14,14 @@ class HopdongController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        //
-        $hopdongs = Hopdong::with(['phong', 'khach'])->get();
+{
+        $hopdongs = Hopdong::with(['phong', 'khach','phieudien', 'phienuoc'])->take(5)->get();
+
         return response()->json([
             'success' => true,
             'data' => $hopdongs
         ]);
-
-    }
+}
 
     /**
      * Show the form for creating a new resource.
