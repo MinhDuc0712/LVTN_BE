@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Khach;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
 class KhachController extends Controller
@@ -31,19 +32,42 @@ class KhachController extends Controller
         //
         $validatedData = $request->validate([
             'ho_ten' => 'required|string|max:255',
-            'cmnd' => 'required|string|max:20|unique:khach,cmnd',
-            'sdt' => 'required|string|max:15|unique:khach,sdt',
-            'email' => 'nullable|email|max:255|unique:khach,email',
+            'cmnd' => 'required|string|max:20',
+            'sdt' => 'required|string|max:15',
+            'email' => 'nullable|email|max:255',
             'dia_chi' => 'nullable|string|max:255',
         ]);
-        $khach = Khach::create($validatedData);
-        return response()->json(
-            [
-                'message' => 'Khách hàng đã được tạo thành công',
+
+        // Check for existing customer by cmnd
+        $khach = Khach::where('cmnd', $validatedData['cmnd'])->first();
+
+        if ($khach) {
+            return response()->json([
+                'message' => 'Khách hàng đã tồn tại',
                 'khach' => $khach,
-            ],
-            201,
-        );
+            ], 200);
+        }
+
+        // Validate uniqueness for new customer
+        $khachValidator = Validator::make($validatedData, [
+            'cmnd' => 'unique:khach,cmnd',
+            'sdt' => 'unique:khach,sdt',
+            'email' => 'nullable|unique:khach,email',
+        ]);
+
+        if ($khachValidator->fails()) {
+            return response()->json([
+                'message' => 'Dữ liệu khách hàng không hợp lệ',
+                'errors' => $khachValidator->errors(),
+            ], 422);
+        }
+
+        $khach = Khach::create($validatedData);
+
+        return response()->json([
+            'message' => 'Khách hàng đã được tạo thành công',
+            'khach' => $khach,
+        ], 201);
     }
 
     /**
