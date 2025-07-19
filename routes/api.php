@@ -144,6 +144,4 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('water-bills', PhieunuocController::class);
     Route::get('/water/last-reading/{hopdong_id}', [PhieunuocController::class, 'getLastReading']);
     Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
-
-
 });
