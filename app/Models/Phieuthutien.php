@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Phieuthutien extends Model
 {
     use HasFactory;
-
-    protected $fillable = ['hopdong_id', 'so_tien', 'ngay_thu', 'noi_dung'];
+    protected $table = 'phieuthutien';
+    public $timestamps = false;
+    protected $fillable = ['hopdong_id','thang', 'so_tien','da_thanh_toan','no', 'ngay_thu','trang_thai', 'noi_dung'];
 
     public function hopdong()
     {
