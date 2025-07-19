@@ -17,6 +17,8 @@ return new class extends Migration {
             $table->string('sdt');
             $table->string('email')->nullable();
             $table->string('dia_chi')->nullable();
+            $table->unsignedBigInteger('MaNguoiDung')->nullable();
+            $table->foreign('MaNguoiDung')->references('MaNguoiDung')->on('users')->onDelete('cascade');
         });
     }
 
