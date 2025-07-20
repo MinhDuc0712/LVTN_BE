@@ -27,7 +27,7 @@ class Hopdong extends Model
         return $this->hasMany(Phieudien::class);
     }
 
-    public function phienuoc()
+    public function phieunuoc()
     {
         return $this->hasMany(Phieunuoc::class);
     }

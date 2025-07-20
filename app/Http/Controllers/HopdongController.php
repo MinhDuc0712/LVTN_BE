@@ -14,14 +14,14 @@ class HopdongController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-{
-        $hopdongs = Hopdong::with(['phong', 'khach','phieudien', 'phienuoc'])->take(5)->get();
+    {
+        $hopdongs = Hopdong::with(['phong', 'khach', 'phieudien', 'phieunuoc', 'phieuthutien'])->get();
 
         return response()->json([
             'success' => true,
-            'data' => $hopdongs
+            'data' => $hopdongs,
         ]);
-}
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -42,7 +42,7 @@ class HopdongController extends Controller
             'cmnd' => 'required|string|max:20',
             'MaNguoiDung' => 'nullable|exists:users,MaNguoiDung',
             'ho_ten' => 'required|string|max:255',
-            'sdt' => 'required|string|max:15|regex:/^0[35789][0-9]{8}$/',
+            'sdt' => 'required|string|max:15',
             'email' => 'nullable|email|max:255',
             'ngay_bat_dau' => 'required|date',
             'ngay_ket_thuc' => 'required|date|after_or_equal:ngay_bat_dau',
@@ -52,42 +52,44 @@ class HopdongController extends Controller
             'ghi_chu' => 'nullable|string|max:255',
         ]);
 
-        // Check if the room is available
+        // Kiểm tra phòng hợp lệ
         $phong = Phong::find($validatedData['phong_id']);
         if (!$phong || $phong->trang_thai !== 'trong') {
             return response()->json(['message' => 'Phòng không khả dụng'], 400);
         }
 
-        // Check for existing customer by cmnd or MaNguoiDung
+        // Kiểm tra khách hàng hợp lệ
         $query = Khach::where('cmnd', $validatedData['cmnd']);
-        if ($validatedData['MaNguoiDung']) {
-            $query->orWhere('MaNguoiDung', $validatedData['MaNguoiDung']);
-        }
+        // if ($validatedData['MaNguoiDung']) {
+        //     $query->orWhere('MaNguoiDung', $validatedData['MaNguoiDung']);
+        // }
         $khach = $query->first();
 
         if ($khach) {
-            // Verify ho_ten and sdt match to prevent mismatches
+            // Xác thức khách hàng hợp lệ
             if ($khach->ho_ten !== $validatedData['ho_ten'] || $khach->sdt !== $validatedData['sdt']) {
-                return response()->json([
-                    'message' => 'Thông tin khách hàng không khớp với CMND/CCCD hiện có',
-                    'errors' => [
-                        'ho_ten' => ['Họ tên không khớp với khách hàng hiện có'],
-                        'sdt' => ['Số điện thoại không khớp với khách hàng hiện có'],
+                return response()->json(
+                    [
+                        'message' => 'Thông tin khách hàng không khớp với CMND/CCCD hiện có',
+                        'errors' => [
+                            'ho_ten' => ['Họ tên không khớp với khách hàng hiện có'],
+                            'sdt' => ['Số điện thoại không khớp với khách hàng hiện có'],
+                        ],
                     ],
-                ], 422);
+                    422,
+                );
             }
         } else {
-            // Create new customer if none exists
+            // Tạo khách hàng
             $khachData = [
                 'cmnd' => $validatedData['cmnd'],
                 'ho_ten' => $validatedData['ho_ten'],
                 'sdt' => $validatedData['sdt'],
                 'email' => $validatedData['email'] ?? null,
                 'dia_chi' => $validatedData['dia_chi'] ?? '',
-                'MaNguoiDung' => $validatedData['MaNguoiDung'] ?? null,
             ];
 
-            // Validate uniqueness for new customer
+            // Dữ liệu khách hàng không hợp lệ
             $khachValidator = Validator::make($khachData, [
                 'cmnd' => 'unique:khach,cmnd',
                 'sdt' => 'unique:khach,sdt',
@@ -95,31 +97,35 @@ class HopdongController extends Controller
             ]);
 
             if ($khachValidator->fails()) {
-                return response()->json([
-                    'message' => 'Dữ liệu khách hàng không hợp lệ',
-                    'errors' => $khachValidator->errors(),
-                ], 422);
+                return response()->json(
+                    [
+                        'message' => 'Dữ liệu khách hàng không hợp lệ',
+                        'errors' => $khachValidator->errors(),
+                    ],
+                    422,
+                );
             }
 
             $khach = Khach::create($khachData);
         }
 
-        // Check for overlapping contracts
+        // Kiểm tra xem khách hàng đã có hợp đồng trong khoảng thời gian nay
         $existingContract = Hopdong::where('phong_id', $validatedData['phong_id'])
             ->where(function ($query) use ($validatedData) {
-                $query->whereBetween('ngay_bat_dau', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
-                      ->orWhereBetween('ngay_ket_thuc', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
-                      ->orWhere(function ($q) use ($validatedData) {
-                          $q->where('ngay_bat_dau', '<=', $validatedData['ngay_bat_dau'])
-                            ->where('ngay_ket_thuc', '>=', $validatedData['ngay_ket_thuc']);
-                      });
-            })->exists();
+                $query
+                    ->whereBetween('ngay_bat_dau', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
+                    ->orWhereBetween('ngay_ket_thuc', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
+                    ->orWhere(function ($q) use ($validatedData) {
+                        $q->where('ngay_bat_dau', '<=', $validatedData['ngay_bat_dau'])->where('ngay_ket_thuc', '>=', $validatedData['ngay_ket_thuc']);
+                    });
+            })
+            ->exists();
 
         if ($existingContract) {
             return response()->json(['message' => 'Phòng đã có hợp đồng trong khoảng thời gian này'], 400);
         }
 
-        // Create contract
+        // Tạo hợp đồng
         $hopdongData = [
             'phong_id' => $validatedData['phong_id'],
             'khach_id' => $khach->id,
@@ -133,21 +139,29 @@ class HopdongController extends Controller
 
         $hopdong = Hopdong::create($hopdongData);
 
-        // Update room status
+        // Câp nhật trang thai phòng
         $phong->update(['trang_thai' => 'da_thue']);
 
-        return response()->json([
-            'message' => 'Hợp đồng đã được tạo thành công',
-            'contract' => $hopdong,
-        ], 201);
+        return response()->json(
+            [
+                'message' => 'Hợp đồng đã được tạo thành công',
+                'contract' => $hopdong,
+            ],
+            201,
+        );
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Hopdong $hopdong)
+    public function show($id)
     {
-        //
+        $hopdong = Hopdong::with(['phong', 'khach', 'phieudien', 'phienuoc', 'phieuthutien'])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $hopdong,
+        ]);
     }
 
     /**
