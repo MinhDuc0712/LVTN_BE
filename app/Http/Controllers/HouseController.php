@@ -106,18 +106,6 @@ class HouseController extends Controller
             'data' => $results,
         ]);
     }
-
-    public function featured()
-    {
-        $houses = House::with(['images', 'utilities', 'user', 'category'])
-            ->where('TrangThai', House::STATUS_APPROVED)
-            // ->where('NoiBat', 1)
-            // ->orderBy('NgayDang', 'desc')
-            ->get();
-
-        return response()->json($houses);
-    }
-
     public function getUserHouses(Request $request)
     {
         $user = $request->user();

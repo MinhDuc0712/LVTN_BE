@@ -22,30 +22,30 @@ class PhieunuocController extends Controller
         'data' => $bills
     ]);
     }
-public function toggleStatus($id)
-{
-    try {
-        $bill = Phieunuoc::findOrFail($id);
-        $bill->trang_thai = $bill->trang_thai === self::STATUS_PAID
-            ? self::STATUS_UNPAID
-            : self::STATUS_PAID;
-        $bill->save();
+// public function toggleStatus($id)
+// {
+//     try {
+//         $bill = Phieunuoc::findOrFail($id);
+//         $bill->trang_thai = $bill->trang_thai === self::STATUS_PAID
+//             ? self::STATUS_UNPAID
+//             : self::STATUS_PAID;
+//         $bill->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Cập nhật trạng thái thành công',
-            'data' => [
-        'id' => $bill->id,
-        'trang_thai' => $bill->trang_thai,
-    ]
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Lỗi khi cập nhật trạng thái: ' . $e->getMessage()
-        ], 500);
-    }
-}
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'Cập nhật trạng thái thành công',
+//             'data' => [
+//         'id' => $bill->id,
+//         'trang_thai' => $bill->trang_thai,
+//     ]
+//         ]);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Lỗi khi cập nhật trạng thái: ' . $e->getMessage()
+//         ], 500);
+//     }
+// }
     /**
      * Show the form for creating a new resource.
      */

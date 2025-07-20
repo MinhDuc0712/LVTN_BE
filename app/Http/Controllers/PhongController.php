@@ -13,6 +13,7 @@ class PhongController extends Controller
         $rooms = Phong::with('images')->get();
 
         return response()->json([
+            'success' => true,
             'data' => $rooms,
         ]);
     }

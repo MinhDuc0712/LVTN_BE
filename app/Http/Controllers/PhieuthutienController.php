@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Phieuthutien;
 use Illuminate\Http\Request;
-
+use App\Models\Phieudien;
+use App\Models\Phieunuoc;
 class PhieuthutienController extends Controller
 {
     /**
@@ -83,22 +84,34 @@ class PhieuthutienController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Phieuthutien $phieuthutien)
-    {
-        $validated = $request->validate([
+{
+    $validated = $request->validate([
         'da_thanh_toan' => 'required|numeric|min:0',
         'no' => 'required|numeric',
         'trang_thai' => 'required|string',
-        'ngay_thu' => 'required|date', 
+        'ngay_thu' => 'required|date',
+        'noi_dung' => 'nullable|string',
     ]);
 
     $phieuthutien->update($validated);
+
+    $hopdongId = $phieuthutien->hopdong_id;
+    $thang = $phieuthutien->thang;
+
+    Phieudien::where('hopdong_id', $hopdongId)
+        ->where('thang', $thang)
+        ->update(['trang_thai' => PhieunuocController::STATUS_PAID]);
+
+    Phieunuoc::where('hopdong_id', $hopdongId)
+        ->where('thang', $thang)
+        ->update(['trang_thai' => PhieunuocController::STATUS_PAID]);
 
     return response()->json([
         'success' => true,
         'message' => 'Cập nhật phiếu thu tiền thành công',
         'data' => $phieuthutien
     ]);
-    }
+}
 
     /**
      * Remove the specified resource from storage.
