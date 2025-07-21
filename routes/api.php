@@ -152,6 +152,8 @@ Route::prefix('admin')->group(function () {
     Route::get('/water/last-reading/{hopdong_id}', [PhieunuocController::class, 'getLastReading']);
     // Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
     Route::apiResource('phieuthutien', phieuthutienController::class);
-
+    Route::delete('phieuthutien/{id}', [phieuthutienController::class, 'destroy']);
+    Route::put('phieuthutien/{id}', [phieuthutienController::class, 'update']);
+    Route::get('khach', [KhachController::class, 'indexAdmin']);
 
 });
