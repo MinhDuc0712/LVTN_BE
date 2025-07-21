@@ -148,5 +148,6 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('phieuthutien', phieuthutienController::class);
     Route::delete('phieuthutien/{id}', [phieuthutienController::class, 'destroy']);
     Route::put('phieuthutien/{id}', [phieuthutienController::class, 'update']);
+    Route::get('khach', [KhachController::class, 'indexAdmin']);
 
 });
