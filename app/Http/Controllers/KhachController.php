@@ -92,8 +92,6 @@ class KhachController extends Controller
                 200,
             );
         }
-
-        // Validate uniqueness for new customer
         $khachValidator = Validator::make($validatedData, [
             'cmnd' => 'unique:khach,cmnd',
             'sdt' => 'unique:khach,sdt',
@@ -133,27 +131,38 @@ class KhachController extends Controller
                 [
                     'success' => false,
                     'data' => [],
-                    'message' => 'Không tìm thấy khách hàng',
+                    'message' => 'Bạn chưa tạo hợp đồng thuê nhà',
                 ],
                 404,
             );
         }
 
         $hopdongs = Hopdong::where('khach_id', $khach->id)
-            ->with('phong')
+            ->with(['phong', 'phieuthutien', 'phieunuoc', 'phieudien'])
+            ->orderBy('id', 'desc')
             ->get()
             ->map(function ($hopdong) {
                 return [
-                    'id' => $hopdong->id,
-                    'propertyName' => $hopdong->phong->ten_phong ?? 'Phòng không xác định',
+                    'id' => $hopdong->phong->id,
+                    'tenPhong' => $hopdong->phong->ten_phong ?? 'Phòng không xác định',
                     'roomNumber' => $hopdong->phong->ten_phong ?? 'N/A',
-                    'monthlyRent' => (float) $hopdong->tien_thue,
-                    'deposit' => (float) $hopdong->tien_coc,
+                    'tienThue' => (float) $hopdong->tien_thue,
+                    'tienCoc' => (float) $hopdong->tien_coc,
                     'startDate' => $hopdong->ngay_bat_dau,
                     'endDate' => $hopdong->ngay_ket_thuc ?? null,
-                    'status' => $hopdong->ngay_ket_thuc && now()->lt($hopdong->ngay_ket_thuc) ? 'active' : 'expired',
-                    'area' => $hopdong->phong->dien_tich ? $hopdong->phong->dien_tich . 'm²' : 'N/A',
-                    'bills' => [],
+                    'status' => now()->between($hopdong->ngay_bat_dau, $hopdong->ngay_ket_thuc) ? 'active' : 'expired',
+                    'dienTich' => $hopdong->phong->dien_tich ? $hopdong->phong->dien_tich . 'm²' : 'N/A',
+                    'bills' => collect($hopdong->phieuthutien)
+                        ->map(function ($phieu) {
+                            return [
+                                'id' => $phieu->id,
+                                'month' => $phieu->thang,
+                                'items' => [['amount' => (float) $phieu->so_tien]],
+                                'paidDate' => $phieu->ngay_thu,
+                                'status' => $phieu->no > 0 ? 'pending' : 'paid',
+                            ];
+                        })
+                        ->toArray(),
                 ];
             });
 

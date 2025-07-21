@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Phieunuoc;
+use App\Models\Hopdong;
+use App\Models\Khach;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -122,9 +124,30 @@ class PhieunuocController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Phieunuoc $phieunuoc)
+    public function show($khachId)
     {
         //
+        $khach = Khach::where('MaNguoiDung', $khachId)->first();
+        if (!$khach) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+        $hopdong = Hopdong::where('khach_id', $khach->id)->pluck('id');
+
+        if ($hopdong->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $phieunuoc = Phieunuoc::whereIn('hopdong_id', $hopdong)->with('hopdong')->orderBy('ngay_tao', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $phieunuoc,
+        ]);
     }
 
     /**

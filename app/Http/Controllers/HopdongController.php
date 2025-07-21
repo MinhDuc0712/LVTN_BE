@@ -154,9 +154,22 @@ class HopdongController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show($khach_id)
     {
-        $hopdong = Hopdong::with(['phong', 'khach', 'phieudien', 'phienuoc', 'phieuthutien'])->findOrFail($id);
+        $hopdong = Hopdong::with(['phong', 'khach', 'phieudien', 'phieunuoc', 'phieuthutien'])
+            ->where('khach_id', $khach_id)
+            ->orderByDesc('ngay_bat_dau')
+            ->get();
+
+        if (!$hopdong) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Không tìm thấy hợp đồng cho khách hàng này.',
+                ],
+                404,
+            );
+        }
 
         return response()->json([
             'success' => true,

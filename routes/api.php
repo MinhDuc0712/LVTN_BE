@@ -96,6 +96,12 @@ Route::prefix('user')->group(function () {
     Route::apiResource('rooms', PhongController::class);
     Route::apiResource('khach', KhachController::class);
     Route::apiResource('hopdong', HopdongController::class);
+    Route::apiResource('phieuDien', PhieudienController::class);
+    Route::apiResource('phieuNuoc', PhieunuocController::class);
+    Route::apiResource('phieuThuTien', PhieuthutienController::class);
+
+
+    
 });
 
 Route::prefix('admin')->group(function () {
