@@ -112,7 +112,7 @@ class HouseController extends Controller
         $houses = $user
             ->houses()
             ->with(['images', 'utilities', 'category'])
-            ->orderBy('NgayDang', 'desc')
+            ->orderBy('MaNha', 'asc')
             ->get();
 
         foreach ($houses as $house) {
@@ -391,9 +391,7 @@ class HouseController extends Controller
         }
 
         if ($house->TrangThai === self::STATUS_HIDDEN) {
-            // Nếu đang ẩn và còn hạn thì cho duyệt lại
             if (now()->lessThanOrEqualTo($house->NgayHetHan)) {
-                // $house->NgayDang = now();
                 $house->TrangThai = self::STATUS_APPROVED;
                 $house->save();
                 return response()->json(['message' => 'Đăng lại thành công (từ trạng thái ẩn)']);
@@ -404,7 +402,7 @@ class HouseController extends Controller
 
         if ($house->TrangThai === self::STATUS_EXPIRED) {
             $house->NgayDang = now();
-            // Nếu hết hạn thì cho phép thanh toán lại
+            $house->save();
             return response()->json(
                 [
                     'message' => 'Tin đã hết hạn, bạn cần thanh toán lại để đăng lại',

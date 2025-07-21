@@ -92,6 +92,7 @@ class PhieudienController extends Controller
                 'success' => false,
                 'message' => 'Lỗi khi lưu hóa đơn điện: ' . $e->getMessage()
             ], 500);
+
         }
     }
 
@@ -104,21 +105,17 @@ class PhieudienController extends Controller
         $currentDate = $request->query('thang');
         $prevMonthDate = Carbon::parse($currentDate)->subMonth()->format('Y-m-d');
 
-        $lastReading = Phieudien::where('hopdong_id', $hopdong_id)
-            ->whereDate('ngay_tao', '<=', $prevMonthDate)
-            ->orderBy('ngay_tao', 'desc')
-            ->first();
+        $lastReading = Phieudien::where('hopdong_id', $hopdong_id)->whereDate('ngay_tao', '<=', $prevMonthDate)->orderBy('ngay_tao', 'desc')->first();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'hopdong_id' => $hopdong_id,
                 'chi_so_cuoi' => $lastReading ? $lastReading->chi_so_cuoi : 0,
-                'thang_truoc' => $prevMonthDate
-            ]
+                'thang_truoc' => $prevMonthDate,
+            ],
         ]);
     }
-
 
     /**
      * Display the specified resource.

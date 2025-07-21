@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -33,7 +34,7 @@ class RoleController extends Controller
         //
         $data = $request->validate([
             'TenQuyen' => 'required|string|max:255',
-            'MoTa' => 'nullable|string|max:255',
+            'MoTaQuyen' => 'nullable|string|max:255',
         ]);
         $role = Role::create($data);
         return response()->json(['message' => 'Quyền được tạo thành công', 'data' => $role], 201);
@@ -63,7 +64,7 @@ class RoleController extends Controller
         //
         $data = $request->validate([
             'TenQuyen' => 'required|string|max:255',
-            'MoTa' => 'nullable|string|max:255',
+            'MoTaQuyen' => 'nullable|string|max:255',
         ]);
         $role->update($data);
         return response()->json(['message' => 'Role updated successfully', 'data' => $role], 200);
@@ -75,6 +76,9 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         //
+        if(UserRole::where('MaQuyen', $role->MaQuyen)->exists()) {
+            return response()->json(['message' => 'Không thể xóa quyền vì đang được sử dụng bởi người dùng'], 400);
+        }
         $role->delete();
         return response()->json(['message' => 'Role deleted successfully'], 200);
     }
