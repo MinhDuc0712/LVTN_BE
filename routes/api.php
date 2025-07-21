@@ -90,7 +90,7 @@ Route::prefix('user')->group(function () {
     // Route::get('/ratings', [RatingController::class, 'index'])
     // Route::get('/houses', [HouseController::class, 'index']);
     // Route::get('/houses/{id}', [HouseController::class, 'show']);
-    Route::get('/houses/featured', [HouseController::class, 'featured']);
+
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
     Route::apiResource('/houses', HouseController::class)->only(['index', 'show']);
     Route::apiResource('rooms', PhongController::class);
@@ -141,10 +141,10 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('giadichvu', GiadichvuController::class);
     Route::apiResource('electric-bills', PhieudienController::class);
     Route::get('/electric/last-reading/{hopdong_id}', [PhieuDienController::class, 'getLastReading']);
-    Route::put('/electric-bills/{id}/toggle-status', [PhieudienController::class, 'toggleStatus']);
+    // Route::put('/electric-bills/{id}/toggle-status', [PhieudienController::class, 'toggleStatus']);
     Route::apiResource('water-bills', PhieunuocController::class);
     Route::get('/water/last-reading/{hopdong_id}', [PhieunuocController::class, 'getLastReading']);
-    Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
+    // Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
     Route::apiResource('phieuthutien', phieuthutienController::class);
     Route::delete('phieuthutien/{id}', [phieuthutienController::class, 'destroy']);
     Route::put('phieuthutien/{id}', [phieuthutienController::class, 'update']);

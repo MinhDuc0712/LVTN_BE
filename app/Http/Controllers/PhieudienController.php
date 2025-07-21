@@ -19,34 +19,33 @@ class PhieudienController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $bills,
+            'data' => $bills
         ]);
     }
-    public function toggleStatus($id)
-    {
-        try {
-            $bill = Phieudien::findOrFail($id);
-            $bill->trang_thai = $bill->trang_thai === self::STATUS_PAID ? self::STATUS_UNPAID : self::STATUS_PAID;
-            $bill->save();
+    // public function toggleStatus($id)
+    // {
+    //     try {
+    //         $bill = Phieudien::findOrFail($id);
+    //         $bill->trang_thai = $bill->trang_thai === self::STATUS_PAID
+    //             ? self::STATUS_UNPAID
+    //             : self::STATUS_PAID;
+    //         $bill->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Cập nhật trạng thái thành công',
-                'data' => [
-                    'id' => $bill->id,
-                    'trang_thai' => $bill->trang_thai,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Lỗi khi cập nhật trạng thái: ' . $e->getMessage(),
-                ],
-                500,
-            );
-        }
-    }
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Cập nhật trạng thái thành công',
+    //             'data' => [
+    //                 'id' => $bill->id,
+    //                 'trang_thai' => $bill->trang_thai,
+    //             ]
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Lỗi khi cập nhật trạng thái: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Show the form for creating a new resource.
@@ -81,23 +80,19 @@ class PhieudienController extends Controller
 
             DB::commit();
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'message' => 'Hóa đơn điện đã được lưu thành công',
-                    'data' => $createdBills,
-                ],
-                201,
-            );
+            return response()->json([
+                'success' => true,
+                'message' => 'Hóa đơn điện đã được lưu thành công',
+                'data' => $createdBills
+            ], 201);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Lỗi khi lưu hóa đơn điện: ' . $e->getMessage(),
-                ],
-                500,
-            );
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lưu hóa đơn điện: ' . $e->getMessage()
+            ], 500);
+
         }
     }
 
