@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Phieuthutien;
+use App\Models\Hopdong;
+use App\Models\Khach;
 use Illuminate\Http\Request;
 use App\Models\Phieudien;
 use App\Models\Phieunuoc;
@@ -67,9 +69,30 @@ class PhieuthutienController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Phieuthutien $phieuthutien)
+    public function show($khachId)
     {
         //
+        $khach = Khach::where('MaNguoiDung', $khachId)->first();
+        if (!$khach) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+        $hopdong = Hopdong::where('khach_id', $khach->id)->pluck('id');
+
+        if ($hopdong->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $phieuthutien = Phieuthutien::whereIn('hopdong_id', $hopdong)->with('hopdong')->orderBy('ngay_thu', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $phieuthutien,
+        ]);
     }
 
     /**

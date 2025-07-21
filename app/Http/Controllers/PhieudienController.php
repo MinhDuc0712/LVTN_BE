@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Phieudien;
+use App\Models\Hopdong;
+use App\Models\Khach;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +21,7 @@ class PhieudienController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $bills
+            'data' => $bills,
         ]);
     }
     // public function toggleStatus($id)
@@ -80,19 +82,23 @@ class PhieudienController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Hóa đơn điện đã được lưu thành công',
-                'data' => $createdBills
-            ], 201);
-
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => 'Hóa đơn điện đã được lưu thành công',
+                    'data' => $createdBills,
+                ],
+                201,
+            );
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi khi lưu hóa đơn điện: ' . $e->getMessage()
-            ], 500);
-
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Lỗi khi lưu hóa đơn điện: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 
@@ -120,9 +126,30 @@ class PhieudienController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Phieudien $phieudien)
+    public function show($khachId)
     {
         //
+        $khach = Khach::where('MaNguoiDung', $khachId)->first();
+        if (!$khach) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+        $hopdong = Hopdong::where('khach_id', $khach->id)->pluck('id');
+
+        if ($hopdong->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
+
+        $phieudien = Phieudien::whereIn('hopdong_id', $hopdong)->with('hopdong')->orderBy('ngay_tao', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $phieudien,
+        ]);
     }
 
     /**

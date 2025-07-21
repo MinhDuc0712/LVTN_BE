@@ -96,6 +96,12 @@ Route::prefix('user')->group(function () {
     Route::apiResource('rooms', PhongController::class);
     Route::apiResource('khach', KhachController::class);
     Route::apiResource('hopdong', HopdongController::class);
+    Route::apiResource('phieuDien', PhieudienController::class);
+    Route::apiResource('phieuNuoc', PhieunuocController::class);
+    Route::apiResource('phieuThuTien', PhieuthutienController::class);
+
+
+    
 });
 
 Route::prefix('admin')->group(function () {
@@ -146,7 +152,6 @@ Route::prefix('admin')->group(function () {
     Route::get('/water/last-reading/{hopdong_id}', [PhieunuocController::class, 'getLastReading']);
     // Route::put('/water/{id}/toggle-status', [PhieunuocController::class, 'toggleStatus']);
     Route::apiResource('phieuthutien', phieuthutienController::class);
-    Route::delete('phieuthutien/{id}', [phieuthutienController::class, 'destroy']);
-    Route::put('phieuthutien/{id}', [phieuthutienController::class, 'update']);
+
 
 });
