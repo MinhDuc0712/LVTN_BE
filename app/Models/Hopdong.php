@@ -19,7 +19,7 @@ class Hopdong extends Model
 
     public function khach()
     {
-        return $this->belongsTo(Khach::class);
+        return $this->belongsTo(Khach::class, );
     }
 
     public function phieudien()

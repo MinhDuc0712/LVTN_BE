@@ -23,7 +23,38 @@ class KhachController extends Controller
             'success' => true,
         ]);
     }
+    public function indexAdmin()
+    {
+        $khachs = Khach::with(['hopdongs' => function($query) {
+                $query->with('phong')->orderBy('ngay_bat_dau', 'desc');
+            }])
+            ->get()
+            ->map(function ($khach) {
+                $phongThue = $khach->hopdongs->map(function ($hopdong) {
+                    return [
+                        'ten_phong' => $hopdong->phong->ten_phong ?? 'N/A',
+                        'phong_id' => $hopdong->phong->id ?? null,
+                        'ngay_ket_thuc' => $hopdong->ngay_ket_thuc ?? null
+                    ];
+                });
+                
+                return [
+                    'id' => $khach->id,
+                    'ho_ten' => $khach->ho_ten,
+                    'cmnd' => $khach->cmnd,
+                    'sdt' => $khach->sdt,
+                    'email' => $khach->email,
+                    'dia_chi' => $khach->dia_chi,
+                    'phong_thue' => $phongThue,
+                    'so_phong' => $phongThue->count() 
+                ];
+            });
 
+        return response()->json([
+            'data' => $khachs,
+            'success' => true,
+        ]);
+    }
     /**
      * Show the form for creating a new resource.
      */
