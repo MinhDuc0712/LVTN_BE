@@ -57,7 +57,7 @@ class DepositHistoryController extends Controller
             'ngay_nap' => now()->toDateTimeString(),
         ]);
         if ($request->trang_thai === 'Hoàn tất') {
-            $user->so_du += $thuc_nhan;
+            // $user->so_du += $thuc_nhan;
             $user->save();
         }
         return response()->json($transaction->load('user'), 201);
@@ -77,7 +77,7 @@ class DepositHistoryController extends Controller
 
         $thucNhan = $validated['so_tien'] + $validated['so_tien'] * ($validated['khuyen_mai'] / 100 ?? 0);
 
-        if ($transaction->trang_thai !== 'Hoàn tất' && $validated['trang_thai'] === 'Hoàn tất') {
+        if ($transaction->trang_thai !== 'Hoàn tất' && $validated['trang_thai'] === 'Hoàn tất' && stripos($transaction->ghi_chu, 'Thanh toán tin đăng') === false) {
             $user = $transaction->user;
             $user->so_du += $thucNhan;
             $user->save();
