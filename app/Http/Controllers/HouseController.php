@@ -149,10 +149,6 @@ class HouseController extends Controller
 
         $validated = $request->validate([
             'TieuDe' => 'required|min:30|max:100',
-            // 'Tinh_TP' => 'required|string|max:255',
-            // 'Quan_Huyen' => 'required|string|max:255',
-            // 'Phuong_Xa' => 'required|string|max:255',
-            // 'Duong' => 'nullable|string|max:255',
             'DiaChi' => 'required|string|max:255',
             'SoPhongNgu' => 'required|integer|min:0',
             'SoPhongTam' => 'required|integer|min:0',
