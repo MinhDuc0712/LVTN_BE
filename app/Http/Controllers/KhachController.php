@@ -69,6 +69,7 @@ class KhachController extends Controller
     public function store(Request $request)
     {
         //
+        $user = Auth::user();
         $validatedData = $request->validate([
             'ho_ten' => 'required|string|max:255',
             'cmnd' => 'required|string|max:20',
@@ -78,9 +79,6 @@ class KhachController extends Controller
             'MaNguoiDung' => 'required|exists:users,MaNguoiDung',
         ]);
 
-        $validatedData['MaNguoiDung'] = $request->user()->MaNguoiDung;
-
-        // Check for existing customer by cmnd
         $khach = Khach::where('cmnd', $validatedData['cmnd'])->first();
 
         if ($khach) {

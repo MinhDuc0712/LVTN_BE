@@ -24,7 +24,7 @@ class PaymentsController extends Controller
     public function index()
     {
         //
-                $user = Auth::user();
+        $user = Auth::user();
         if (!$user) {
             return response()->json(['message' => 'Không xác thực được người dùng'], 401);
         }
@@ -62,7 +62,6 @@ class PaymentsController extends Controller
 
         $house = House::where('MaNha', $validated['houseId'])->where('MaNguoiDung', $user->MaNguoiDung)->firstOrFail();
 
-        // Tính toán chi phí
         $unitMap = ['day' => 1, 'week' => 7, 'month' => 30];
         $days = $validated['quantity'] * $unitMap[$validated['unit']];
         $planPrice = $validated['type'] === 'vip' ? 30000 : 5000;
@@ -72,9 +71,7 @@ class PaymentsController extends Controller
         $expiryDate = now()->addDays($validDays);
         $maGiaoDichRequest = $validated['ma_giao_dich'] ?? null;
 
-        // Phân biệt loại thanh toán
         if ($maGiaoDichRequest) {
-            // Xử lý thanh toán bằng chuyển khoản
             $deposit = DepositHistory::where('ma_giao_dich', $maGiaoDichRequest)->where('trang_thai', 'Hoàn tất')->firstOrFail();
 
             if (Payments::where('MaGiaoDich', $maGiaoDichRequest)->exists()) {
@@ -82,7 +79,6 @@ class PaymentsController extends Controller
             }
 
             $maGiaoDich = $maGiaoDichRequest;
-
         } else {
             // Xử lý thanh toán bằng ví
             if ($user->so_du < $cost) {
@@ -94,7 +90,6 @@ class PaymentsController extends Controller
 
             $maGiaoDich = 'WALLET-' . Str::uuid();
         }
-
 
         // Cập nhật bài đăng
         $house->TrangThai = $validated['type'] === 'vip' ? House::STATUS_APPROVED : House::STATUS_PROCESSING;

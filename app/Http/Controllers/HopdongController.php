@@ -157,8 +157,8 @@ class HopdongController extends Controller
     public function show($maNguoiDung)
     {
         $hopdong = Hopdong::with(['phong', 'khach', 'phieudien', 'phieunuoc', 'phieuthutien'])
-            ->whereHas('khach',function($query) use ($maNguoiDung){
-                $query->where('MaNguoiDung',$maNguoiDung);
+            ->whereHas('khach', function ($query) use ($maNguoiDung) {
+                $query->where('MaNguoiDung', $maNguoiDung);
             })
             ->orderByDesc('ngay_bat_dau')
             ->get();
@@ -167,7 +167,7 @@ class HopdongController extends Controller
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Không tìm thấy hợp đồng cho khách hàng này.',
+                    'message' => 'Không tìm thấy hợp đồng cho người dùng này.',
                 ],
                 404,
             );
