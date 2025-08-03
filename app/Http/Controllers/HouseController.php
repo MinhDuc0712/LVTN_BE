@@ -27,7 +27,6 @@ class HouseController extends Controller
         $query = House::query()
             ->with(['images', 'utilities', 'user', 'category'])
             ->where('TrangThai', self::STATUS_APPROVED);
-
         // Lọc theo giá
         if ($request->filled('price')) {
             switch ($request->price) {
@@ -167,15 +166,12 @@ class HouseController extends Controller
             'utilities.*' => 'exists:utilities,MaTienIch',
         ]);
 
-        // Tạo nhà
         $house = House::create([...$validated, 'MaNguoiDung' => $user->MaNguoiDung]);
 
-        // Gắn tiện ích nếu có
         if (!empty($validated['utilities'])) {
             $house->utilities()->sync(array_map('intval', $validated['utilities']));
         }
 
-        // Thêm hình ảnh
         foreach ($validated['images'] as $index => $url) {
             Images::create([
                 'MaNha' => $house->MaNha,
@@ -299,39 +295,16 @@ class HouseController extends Controller
      * Show the form for editing the specified resource.
      */
     public function getAllForAdmin(Request $request)
-    {
-        $query = House::with(['images', 'utilities', 'user', 'category']);
+{
+    $houses = House::with(['images', 'utilities', 'user', 'category'])
+        ->orderBy('NgayDang', 'desc')
+        ->get();
 
-        // Lọc theo trạng thái
-        if ($request->has('status')) {
-            $query->where('TrangThai', $request->status);
-        }
-
-        // Tìm kiếm theo tiêu đề
-        if ($request->has('search')) {
-            $query->where('TieuDe', 'like', '%' . $request->search . '%');
-        }
-
-        // Sắp xếp
-        $sortField = $request->get('sort_field', 'NgayDang');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortField, $sortOrder);
-
-        // Phân trang
-        $perPage = $request->get('per_page', 10);
-        $houses = $query->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => $houses->items(),
-            'pagination' => [
-                'total' => $houses->total(),
-                'per_page' => $houses->perPage(),
-                'current_page' => $houses->currentPage(),
-                'last_page' => $houses->lastPage(),
-            ],
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $houses,
+    ]);
+}
     public function approve($id)
     {
         $house = House::findOrFail($id);
@@ -348,7 +321,7 @@ class HouseController extends Controller
     public function reject(Request $request, $id)
     {
         $house = House::findOrFail($id);
-        $house->TrangThai = 'Đã từ chối';
+        $house->TrangThai = self::STATUS_REJECTED;
         $house->LyDoTuChoi = $request->input('reason');
         $house->save();
 

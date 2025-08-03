@@ -7,7 +7,9 @@ use App\Models\Khach;
 use App\Models\Phong;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingConfirmationMail;
+use Carbon\Carbon;
 class HopdongController extends Controller
 {
     /**
@@ -35,133 +37,133 @@ class HopdongController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        //
-        $validatedData = $request->validate([
-            'phong_id' => 'required|exists:phong,id',
-            'cmnd' => 'required|string|max:20',
-            'MaNguoiDung' => 'nullable|exists:users,MaNguoiDung',
-            'ho_ten' => 'required|string|max:255',
-            'sdt' => 'required|string|max:15',
-            'email' => 'nullable|email|max:255',
-            'ngay_bat_dau' => 'required|date',
-            'ngay_ket_thuc' => 'required|date|after_or_equal:ngay_bat_dau',
-            'tien_coc' => 'required|numeric|min:0',
-            'tien_thue' => 'required|numeric|min:0',
-            'chi_phi_tien_ich' => 'nullable|numeric|min:0',
-            'ghi_chu' => 'nullable|string|max:255',
-        ]);
+{
+    $validatedData = $request->validate([
+        'phong_id' => 'required|exists:phong,id',
+        'cmnd' => 'required|string|max:20',
+        'MaNguoiDung' => 'nullable|exists:users,MaNguoiDung',
+        'ho_ten' => 'required|string|max:255',
+        'sdt' => 'required|string|max:15',
+        'email' => 'nullable|email|max:255',
+        'ngay_bat_dau' => 'required|date',
+        'ngay_ket_thuc' => 'required|date|after_or_equal:ngay_bat_dau',
+        'tien_coc' => 'required|numeric|min:0',
+        'tien_thue' => 'required|numeric|min:0',
+        'chi_phi_tien_ich' => 'nullable|numeric|min:0',
+        'ghi_chu' => 'nullable|string|max:255',
+    ]);
 
-        // Kiểm tra phòng hợp lệ
-        $phong = Phong::find($validatedData['phong_id']);
-        if (!$phong || $phong->trang_thai !== 'trong') {
-            return response()->json(['message' => 'Phòng không khả dụng'], 400);
+    // Kiểm tra phòng
+    $phong = Phong::find($validatedData['phong_id']);
+    if (!$phong || $phong->trang_thai !== 'trong') {
+        return response()->json(['message' => 'Phòng không khả dụng'], 400);
+    }
+
+    // Kiểm tra khách hàng
+    $query = Khach::where('cmnd', $validatedData['cmnd']);
+    $khach = $query->first();
+
+    if ($khach) {
+        if ($khach->ho_ten !== $validatedData['ho_ten'] || $khach->sdt !== $validatedData['sdt']) {
+            return response()->json([
+                'message' => 'Thông tin khách hàng không khớp với CMND/CCCD hiện có',
+                'errors' => [
+                    'ho_ten' => ['Họ tên không khớp với khách hàng hiện có'],
+                    'sdt' => ['Số điện thoại không khớp với khách hàng hiện có'],
+                ],
+            ], 422);
         }
-
-        // Kiểm tra khách hàng hợp lệ
-        $query = Khach::where('cmnd', $validatedData['cmnd']);
-        // if ($validatedData['MaNguoiDung']) {
-        //     $query->orWhere('MaNguoiDung', $validatedData['MaNguoiDung']);
-        // }
-        $khach = $query->first();
-
-        if ($khach) {
-            // Xác thức khách hàng hợp lệ
-            if ($khach->ho_ten !== $validatedData['ho_ten'] || $khach->sdt !== $validatedData['sdt']) {
-                return response()->json(
-                    [
-                        'message' => 'Thông tin khách hàng không khớp với CMND/CCCD hiện có',
-                        'errors' => [
-                            'ho_ten' => ['Họ tên không khớp với khách hàng hiện có'],
-                            'sdt' => ['Số điện thoại không khớp với khách hàng hiện có'],
-                        ],
-                    ],
-                    422,
-                );
-            }
-        } else {
-            // Tạo khách hàng
-            $khachData = [
-                'cmnd' => $validatedData['cmnd'],
-                'ho_ten' => $validatedData['ho_ten'],
-                'sdt' => $validatedData['sdt'],
-                'email' => $validatedData['email'] ?? null,
-                'dia_chi' => $validatedData['dia_chi'] ?? '',
-            ];
-
-            // Dữ liệu khách hàng không hợp lệ
-            $khachValidator = Validator::make($khachData, [
-                'cmnd' => 'unique:khach,cmnd',
-                'sdt' => 'unique:khach,sdt',
-                'email' => 'nullable|unique:khach,email',
-            ]);
-
-            if ($khachValidator->fails()) {
-                return response()->json(
-                    [
-                        'message' => 'Dữ liệu khách hàng không hợp lệ',
-                        'errors' => $khachValidator->errors(),
-                    ],
-                    422,
-                );
-            }
-
-            $khach = Khach::create($khachData);
-        }
-
-        // Kiểm tra xem khách hàng đã có hợp đồng trong khoảng thời gian nay
-        $existingContract = Hopdong::where('phong_id', $validatedData['phong_id'])
-            ->where(function ($query) use ($validatedData) {
-                $query
-                    ->whereBetween('ngay_bat_dau', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
-                    ->orWhereBetween('ngay_ket_thuc', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
-                    ->orWhere(function ($q) use ($validatedData) {
-                        $q->where('ngay_bat_dau', '<=', $validatedData['ngay_bat_dau'])->where('ngay_ket_thuc', '>=', $validatedData['ngay_ket_thuc']);
-                    });
-            })
-            ->exists();
-
-        if ($existingContract) {
-            return response()->json(['message' => 'Phòng đã có hợp đồng trong khoảng thời gian này'], 400);
-        }
-
-        // Tạo hợp đồng
-        $hopdongData = [
-            'phong_id' => $validatedData['phong_id'],
-            'khach_id' => $khach->id,
-            'ngay_bat_dau' => $validatedData['ngay_bat_dau'],
-            'ngay_ket_thuc' => $validatedData['ngay_ket_thuc'],
-            'tien_coc' => $validatedData['tien_coc'],
-            'tien_thue' => $validatedData['tien_thue'],
-            'chi_phi_tien_ich' => $validatedData['chi_phi_tien_ich'] ?? 0,
-            'ghi_chu' => $validatedData['ghi_chu'] ?? '',
+    } else {
+        // Tạo khách hàng mới
+        $khachData = [
+            'cmnd' => $validatedData['cmnd'],
+            'ho_ten' => $validatedData['ho_ten'],
+            'sdt' => $validatedData['sdt'],
+            'email' => $validatedData['email'] ?? null,
+            'dia_chi' => $validatedData['dia_chi'] ?? '',
+            'MaNguoiDung' => $validatedData['MaNguoiDung'],
         ];
 
-        $hopdong = Hopdong::create($hopdongData);
+        $khachValidator = Validator::make($khachData, [
+            'cmnd' => 'unique:khach,cmnd',
+            'sdt' => 'unique:khach,sdt',
+            'email' => 'nullable|unique:khach,email',
+        ]);
 
-        // Câp nhật trang thai phòng
-        $phong->update(['trang_thai' => 'da_thue']);
+        if ($khachValidator->fails()) {
+            return response()->json([
+                'message' => 'Dữ liệu khách hàng không hợp lệ',
+                'errors' => $khachValidator->errors(),
+            ], 422);
+        }
 
-        return response()->json(
-            [
-                'message' => 'Hợp đồng đã được tạo thành công',
-                'contract' => $hopdong,
-            ],
-            201,
-        );
+        $khach = Khach::create($khachData);
     }
+
+    // Kiểm tra chồng chéo hợp đồng
+    $existingContract = Hopdong::where('phong_id', $validatedData['phong_id'])
+        ->where(function ($query) use ($validatedData) {
+            $query
+                ->whereBetween('ngay_bat_dau', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
+                ->orWhereBetween('ngay_ket_thuc', [$validatedData['ngay_bat_dau'], $validatedData['ngay_ket_thuc']])
+                ->orWhere(function ($q) use ($validatedData) {
+                    $q->where('ngay_bat_dau', '<=', $validatedData['ngay_bat_dau'])
+                      ->where('ngay_ket_thuc', '>=', $validatedData['ngay_ket_thuc']);
+                });
+        })->exists();
+
+    if ($existingContract) {
+        return response()->json(['message' => 'Phòng đã có hợp đồng trong khoảng thời gian này'], 400);
+    }
+
+    // Tạo hợp đồng
+    $hopdongData = [
+        'phong_id' => $validatedData['phong_id'],
+        'khach_id' => $khach->id,
+        'ngay_bat_dau' => $validatedData['ngay_bat_dau'],
+        'ngay_ket_thuc' => $validatedData['ngay_ket_thuc'],
+        'tien_coc' => $validatedData['tien_coc'],
+        'tien_thue' => $validatedData['tien_thue'],
+        'chi_phi_tien_ich' => $validatedData['chi_phi_tien_ich'] ?? 0,
+        'ghi_chu' => $validatedData['ghi_chu'] ?? '',
+    ];
+
+    $hopdong = Hopdong::create($hopdongData);
+
+    // Cập nhật trạng thái phòng
+    $phong->update(['trang_thai' => 'da_thue']);
+
+    //  Gửi email xác nhận nếu có email
+    if (!empty($validatedData['email'])) {
+        $tongChiPhi = number_format($validatedData['tien_coc'] + $validatedData['tien_thue'], 0, ',', '.') . ' VNĐ';
+
+        Mail::to($validatedData['email'])->send(new BookingConfirmationMail(
+            $phong->ten_phong ?? 'Không rõ',
+            $validatedData['ngay_bat_dau'],
+            Carbon::parse($validatedData['ngay_bat_dau'])->diffInMonths(Carbon::parse($validatedData['ngay_ket_thuc'])) ?: 1,
+            $tongChiPhi
+        ));
+    }
+
+    return response()->json([
+        'message' => 'Hợp đồng đã được tạo thành công',
+        'contract' => $hopdong,
+    ], 201);
+}
 
     /**
      * Display the specified resource.
      */
-    public function show($khach_id)
+    public function show($maNguoiDung)
     {
         $hopdong = Hopdong::with(['phong', 'khach', 'phieudien', 'phieunuoc', 'phieuthutien'])
-            ->where('khach_id', $khach_id)
+            ->whereHas('khach',function($query) use ($maNguoiDung){
+                $query->where('MaNguoiDung',$maNguoiDung);
+            })
             ->orderByDesc('ngay_bat_dau')
             ->get();
 
-        if (!$hopdong) {
+        if ($hopdong->isEmpty()) {
             return response()->json(
                 [
                     'success' => false,

@@ -75,7 +75,7 @@ class KhachController extends Controller
             'sdt' => 'required|string|max:15',
             'email' => 'nullable|email|max:255',
             // 'dia_chi' => 'nullable|string|max:255',
-            'MaNguoiDung' => 'required|exists:users,id',
+            'MaNguoiDung' => 'required|exists:users,MaNguoiDung',
         ]);
 
         $validatedData['MaNguoiDung'] = $request->user()->MaNguoiDung;

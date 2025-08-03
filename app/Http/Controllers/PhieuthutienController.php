@@ -120,6 +120,7 @@ class PhieuthutienController extends Controller
 
     $hopdongId = $phieuthutien->hopdong_id;
     $thang = $phieuthutien->thang;
+    $validated['trang_thai'] = 'Đã thanh toán';
 
     Phieudien::where('hopdong_id', $hopdongId)
         ->where('thang', $thang)
