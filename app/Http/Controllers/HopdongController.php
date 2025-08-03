@@ -87,6 +87,7 @@ class HopdongController extends Controller
                 'sdt' => $validatedData['sdt'],
                 'email' => $validatedData['email'] ?? null,
                 'dia_chi' => $validatedData['dia_chi'] ?? '',
+                'MaNguoiDung' => $validatedData['MaNguoiDung'],
             ];
 
             // Dữ liệu khách hàng không hợp lệ
@@ -154,18 +155,20 @@ class HopdongController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($khach_id)
+    public function show($maNguoiDung)
     {
         $hopdong = Hopdong::with(['phong', 'khach', 'phieudien', 'phieunuoc', 'phieuthutien'])
-            ->where('khach_id', $khach_id)
+            ->whereHas('khach', function ($query) use ($maNguoiDung) {
+                $query->where('MaNguoiDung', $maNguoiDung);
+            })
             ->orderByDesc('ngay_bat_dau')
             ->get();
 
-        if (!$hopdong) {
+        if ($hopdong->isEmpty()) {
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Không tìm thấy hợp đồng cho khách hàng này.',
+                    'message' => 'Không tìm thấy hợp đồng cho người dùng này.',
                 ],
                 404,
             );

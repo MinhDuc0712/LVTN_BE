@@ -79,6 +79,7 @@ Route::prefix('user')->group(function () {
         // Route::put('/houses/{id}', [HouseController::class, 'update']);
         Route::apiResource('/ratings', RatingController::class);
         Route::apiResource('/favorites', FavouriteHouseController::class);
+        Route::apiResource('khach', KhachController::class);
         Route::apiResource('/payments', PaymentsController::class);
         Route::post('/wallet-payments', [PaymentsController::class, 'storeWalletPayment']);
     });
@@ -94,14 +95,10 @@ Route::prefix('user')->group(function () {
     Route::get('/houses/category/{id}', [HouseController::class, 'getByCategory']);
     Route::apiResource('/houses', HouseController::class)->only(['index', 'show']);
     Route::apiResource('rooms', PhongController::class);
-    Route::apiResource('khach', KhachController::class);
     Route::apiResource('hopdong', HopdongController::class);
     Route::apiResource('phieuDien', PhieudienController::class);
     Route::apiResource('phieuNuoc', PhieunuocController::class);
     Route::apiResource('phieuThuTien', PhieuthutienController::class);
-
-
-    
 });
 
 Route::prefix('admin')->group(function () {
@@ -155,5 +152,4 @@ Route::prefix('admin')->group(function () {
     Route::delete('phieuthutien/{id}', [phieuthutienController::class, 'destroy']);
     Route::put('phieuthutien/{id}', [phieuthutienController::class, 'update']);
     Route::get('khach', [KhachController::class, 'indexAdmin']);
-
 });

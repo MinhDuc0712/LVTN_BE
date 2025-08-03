@@ -18,6 +18,6 @@ class Khach extends Model
     }
     public function user()
     {
-        return $this->belongsTo(User::class, 'MaNguoiDung');
+        return $this->belongsTo(User::class, 'MaNguoiDung', 'MaNguoiDung');
     }
 }

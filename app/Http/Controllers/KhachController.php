@@ -69,18 +69,16 @@ class KhachController extends Controller
     public function store(Request $request)
     {
         //
+        $user = Auth::user();
         $validatedData = $request->validate([
             'ho_ten' => 'required|string|max:255',
             'cmnd' => 'required|string|max:20',
             'sdt' => 'required|string|max:15',
             'email' => 'nullable|email|max:255',
             // 'dia_chi' => 'nullable|string|max:255',
-            'MaNguoiDung' => 'required|exists:users,id',
+            'MaNguoiDung' => 'required|exists:users,MaNguoiDung',
         ]);
 
-        $validatedData['MaNguoiDung'] = $request->user()->MaNguoiDung;
-
-        // Check for existing customer by cmnd
         $khach = Khach::where('cmnd', $validatedData['cmnd'])->first();
 
         if ($khach) {
