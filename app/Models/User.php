@@ -41,6 +41,6 @@ class User extends Authenticatable
     }
     public function khach()
     {
-        return $this->hasOne(Khach::class, 'MaNguoiDung');
+        return $this->hasOne(Khach::class, 'MaNguoiDung', 'MaNguoiDung');
     }
 }

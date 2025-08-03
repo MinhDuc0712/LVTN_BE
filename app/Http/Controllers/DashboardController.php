@@ -7,6 +7,10 @@ use App\Models\User;
 use App\Models\House;
 use App\Models\DepositHistory;
 use App\Models\Payments;
+use App\Models\Hopdong;
+use App\Models\Phong;
+use App\Models\Khach;
+use App\Models\Phieuthutien;
 use App\Models\Categories;
 use Illuminate\Support\Facades\DB;
 
@@ -15,17 +19,13 @@ class DashboardController extends Controller
     //
     public function stats()
     {
-        // Tổng số người dùng
         $totalUsers = User::count();
 
-        // Tổng số bài đăng
         $totalPosts = House::count();
 
-        // Tổng số giao dịch nạp tiền hoàn tất
         $totalTransactions = DepositHistory::where('trang_thai', 'Hoàn tất')->count();
 
-        // Tổng doanh thu từ các giao dịch Payments hoàn tất
-        $totalRevenue = DepositHistory::where('trang_thai', 'Hoàn tất')->sum('so_tien') + Payments::sum('TongTien');
+        $totalRevenue = DepositHistory::where('trang_thai', 'Hoàn tất')->sum('so_tien');
 
         return response()->json([
             'totalUsers' => $totalUsers,
@@ -56,11 +56,8 @@ class DashboardController extends Controller
             ->where('trang_thai', 'Hoàn tất')
             ->groupBy('label');
 
-        $paymentQuery = DB::table('payments')
-            ->selectRaw(sprintf($groupFormat, 'created_at') . ' as label, SUM(TongTien) as revenue')
-            ->groupBy('label');
 
-        $combined = $depositQuery->unionAll($paymentQuery);
+        $combined = $depositQuery;
 
         $results = DB::table(DB::raw("({$combined->toSql()}) as combined"))
             ->mergeBindings($combined)
